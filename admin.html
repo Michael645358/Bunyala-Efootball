@@ -1,0 +1,31 @@
+<!DOCTYPE html><html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body><header class="hero">
+    <h1>Admin Dashboard</h1>
+    <p>Bunyala Efootball Gamers</p><a href="index.html">
+    <button>Home</button>
+</a>
+
+</header><section>
+    <h2>Registered Players</h2>
+    <div id="adminPlayers"></div>
+</section><section>
+    <h2>Create Tournament</h2><input id="tournamentName"
+       type="text"
+       placeholder="Tournament Name">
+
+<br><br>
+
+<button onclick="createTournament()">
+    Create Tournament
+</button>
+
+<p id="tournamentMessage"></p>
+
+</section><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="admin.js"></script></body>
+</html>
