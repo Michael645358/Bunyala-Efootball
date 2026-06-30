@@ -1,46 +1,85 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tournament Fixtures</title>
 <link rel="stylesheet" href="style.css">
 </head>
-<body><header class="hero">
+<body>
+
+<header class="hero">
     <h1>Bunyala Efootball Gamers</h1>
-    <p>Tournament Fixtures</p><a href="index.html">
-    <button>Home</button>
-</a>
+    <p>Tournament Fixtures</p>
 
-</header><section>
-    <h2>Round 1</h2><div class="card">
-    Mike 🆚 Bruzzwilliams
-</div>
+    <a href="index.html">
+        <button>Home</button>
+    </a>
+</header>
 
-<div class="card">
-    Player A 🆚 Player B
-</div>
+<section>
+    <h2>Current Fixtures</h2>
+    <div id="fixturesList"></div>
+</section>
 
-<div class="card">
-    Player C 🆚 Player D
-</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<div class="card">
-    Player E 🆚 Player F
-</div>
+<script>
+const SUPABASE_URL =
+"https://gwncuzcafdcorfenrqyr.supabase.co";
 
-</section><section>
-    <h2>Semi Finals</h2><div class="card">
-    Winner Match 1 🆚 Winner Match 2
-</div>
+const SUPABASE_KEY =
+"sb_publishable_EnMAhkA4dWpUuJYYdpizhg_VQ6CDG4z";
 
-<div class="card">
-    Winner Match 3 🆚 Winner Match 4
-</div>
+const supabaseClient =
+supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
 
-</section><section>
-    <h2>Final</h2><div class="card">
-    Semi Final Winner 1 🆚 Semi Final Winner 2
-</div>
+async function loadFixtures() {
 
-</section></body>
+    const { data, error } =
+    await supabaseClient
+    .from("fixtures")
+    .select("*")
+    .order("id");
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById("fixturesList");
+
+    container.innerHTML = "";
+
+    if(data.length === 0){
+        container.innerHTML =
+        "<div class='card'>No fixtures available</div>";
+        return;
+    }
+
+    data.forEach(fixture => {
+
+        let card =
+        document.createElement("div");
+
+        card.className = "card";
+
+        card.innerHTML =
+        fixture.player1 +
+        " 🆚 " +
+        fixture.player2;
+
+        container.appendChild(card);
+
+    });
+}
+
+loadFixtures();
+</script>
+
+</body>
 </html>
