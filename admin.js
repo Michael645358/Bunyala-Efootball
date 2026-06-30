@@ -195,6 +195,97 @@ async function deleteTournament(id) {
     loadTournaments();
 }
 
+async function createFixture() {
+
+    let player1 =
+    document.getElementById("player1").value;
+
+    let player2 =
+    document.getElementById("player2").value;
+
+    const { error } =
+    await supabaseClient
+    .from("fixtures")
+    .insert([
+        {
+            player1: player1,
+            player2: player2
+        }
+    ]);
+
+    if(error){
+        alert("Failed to create fixture");
+        console.log(error);
+        return;
+    }
+
+    document.getElementById("player1").value = "";
+    document.getElementById("player2").value = "";
+
+    loadFixtures();
+}
+
+async function loadFixtures() {
+
+    const { data, error } =
+    await supabaseClient
+    .from("fixtures")
+    .select("*")
+    .order("id");
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById("fixturesAdminList");
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    data.forEach(fixture => {
+
+        let card =
+        document.createElement("div");
+
+        card.className = "card";
+
+        card.innerHTML =
+        fixture.player1 +
+        " 🆚 " +
+        fixture.player2 +
+        "<br><br>" +
+        "<button onclick='deleteFixture(" +
+        fixture.id +
+        ")'>Delete</button>";
+
+        container.appendChild(card);
+
+    });
+}
+
+async function deleteFixture(id) {
+
+    const confirmDelete =
+    confirm("Delete fixture?");
+
+    if(!confirmDelete) return;
+
+    const { error } =
+    await supabaseClient
+    .from("fixtures")
+    .delete()
+    .eq("id", id);
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    loadFixtures();
+}
 // LOGOUT
 function logout() {
 
@@ -209,3 +300,4 @@ function logout() {
 // START
 loadPlayers();
 loadTournaments();
+loadFixtures();

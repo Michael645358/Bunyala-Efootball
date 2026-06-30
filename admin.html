@@ -48,6 +48,28 @@
 
     <p id="tournamentMessage"></p>
 
-    <div id="tournamentsList"></div>
-</section><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="admin.js"></script></body>
+<div id="tournamentsList"></div>
+</section>
+
+<section>
+    <h2>Create Fixture</h2>
+
+    <input id="player1" type="text" placeholder="Player 1">
+
+    <br><br>
+
+    <input id="player2" type="text" placeholder="Player 2">
+
+    <br><br>
+
+    <button onclick="createFixture()">
+        Create Fixture
+    </button>
+
+    <div id="fixturesAdminList"></div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin.js"></script>
+</body>
 </html>
