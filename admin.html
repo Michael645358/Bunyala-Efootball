@@ -67,7 +67,64 @@
     </button>
 
     <div id="fixturesAdminList"></div>
+  <section>
+    <h2>Leaderboard</h2>
+
+    <input id="leaderboardUsername"
+           type="text"
+           placeholder="Username">
+
+    <br><br>
+
+    <input id="leaderboardPoints"
+           type="number"
+           placeholder="Points">
+
+    <br><br>
+
+    <button onclick="addLeaderboard()">
+        Add Player
+    </button>
+
+    <div id="adminLeaderboardList"></div>
+</section>  <section>
+    <h2>Leaderboard</h2>
+    ...
+    <div id="adminLeaderboardList"></div>
 </section>
+
+<!-- PASTE HALL OF FAME SECTION HERE -->
+
+<section>
+    <h2>Hall of Fame</h2>
+
+    <input id="hofTournament"
+           type="text"
+           placeholder="Tournament Name">
+
+    <br><br>
+
+    <input id="hofChampion"
+           type="text"
+           placeholder="Champion">
+
+    <br><br>
+
+    <input id="hofYear"
+           type="number"
+           placeholder="Year">
+
+    <br><br>
+
+    <button onclick="addHallOfFame()">
+        Add Champion
+    </button>
+
+    <div id="adminHallOfFameList"></div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="admin.js"></script>

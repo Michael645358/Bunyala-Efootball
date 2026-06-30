@@ -100,23 +100,142 @@ async function loadTournament() {
         return;
     }
 
-container.innerHTML = "";
+    container.innerHTML = "";
 
-data.forEach(tournament => {
+    data.forEach(tournament => {
 
-    container.innerHTML +=
-    "<div class='card'>" +
-    "<h3>" + tournament.title + "</h3>" +
-    "<p>Entry Fee: KSh " +
-    tournament.entry_fee +
-    "</p>" +
-    "<p>Prize Pool: KSh " +
-    tournament.prize_pool +
-    "</p>" +
-    "</div>";
+        container.innerHTML +=
+        "<div class='card'>" +
+        "<h3>" + tournament.title + "</h3>" +
+        "<p>Entry Fee: KSh " +
+        tournament.entry_fee +
+        "</p>" +
+        "<p>Prize Pool: KSh " +
+        tournament.prize_pool +
+        "</p>" +
+        "</div>";
 
-});
+    });
+}
+
+async function loadHomeFixtures() {
+
+    const { data, error } =
+    await supabaseClient
+    .from("fixtures")
+    .select("*")
+    .order("id");
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById("homeFixturesList");
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    if(data.length === 0){
+        container.innerHTML =
+        "<div class='card'>No fixtures available</div>";
+        return;
+    }
+
+    data.forEach(fixture => {
+
+        container.innerHTML +=
+        "<div class='card'>" +
+        fixture.player1 +
+        " 🆚 " +
+        fixture.player2 +
+        "</div>";
+
+    });
+}
+
+async function loadLeaderboard() {
+
+    const { data, error } =
+    await supabaseClient
+    .from("leaderboard")
+    .select("*")
+    .order("points", {
+        ascending: false
+    });
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById("leaderboardList");
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    data.forEach((player, index) => {
+
+        let medal = "";
+
+        if(index === 0) medal = "🥇";
+        else if(index === 1) medal = "🥈";
+        else if(index === 2) medal = "🥉";
+
+        container.innerHTML +=
+        "<div class='card'>" +
+        medal + " " +
+        player.username +
+        " - " +
+        player.points +
+        " Points" +
+        "</div>";
+
+    });
+}
+async function loadHallOfFame() {
+
+    const { data, error } =
+    await supabaseClient
+    .from("halloffame")
+    .select("*")
+    .order("year", {
+        ascending: false
+    });
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById(
+        "hallOfFameList"
+    );
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    data.forEach(item => {
+
+        container.innerHTML +=
+        "<div class='card'>" +
+        "🏆 " + item.tournament +
+        " (" + item.year + ")" +
+        "<br>" +
+        "Champion: " + item.champion +
+        "</div>";
+
+    });
 }
 
 loadPlayers();
 loadTournament();
+loadHomeFixtures();
+loadLeaderboard();
+loadHallOfFame();

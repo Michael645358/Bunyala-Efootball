@@ -286,6 +286,203 @@ async function deleteFixture(id) {
 
     loadFixtures();
 }
+async function addLeaderboard() {
+
+    let username =
+    document.getElementById(
+        "leaderboardUsername"
+    ).value;
+
+    let points =
+    document.getElementById(
+        "leaderboardPoints"
+    ).value;
+
+    const { error } =
+    await supabaseClient
+    .from("leaderboard")
+    .insert([
+        {
+            username: username,
+            points: points
+        }
+    ]);
+
+    if(error){
+        alert("Failed to add player");
+        console.log(error);
+        return;
+    }
+
+    document.getElementById(
+        "leaderboardUsername"
+    ).value = "";
+
+    document.getElementById(
+        "leaderboardPoints"
+    ).value = "";
+
+    loadLeaderboard();
+}
+
+async function loadLeaderboard() {
+
+    const { data, error } =
+    await supabaseClient
+    .from("leaderboard")
+    .select("*")
+    .order("points", {
+        ascending: false
+    });
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById(
+        "adminLeaderboardList"
+    );
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    data.forEach(player => {
+
+        let card =
+        document.createElement("div");
+
+        card.className = "card";
+
+        card.innerHTML =
+        player.username +
+        " - " +
+        player.points +
+        " Points" +
+        "<br><br>" +
+        "<button onclick='deleteLeaderboard(" +
+        player.id +
+        ")'>Delete</button>";
+
+        container.appendChild(card);
+
+    });
+}
+
+async function deleteLeaderboard(id) {
+
+    const confirmDelete =
+    confirm("Delete player?");
+
+    if(!confirmDelete) return;
+
+    const { error } =
+    await supabaseClient
+    .from("leaderboard")
+    .delete()
+    .eq("id", id);
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    loadLeaderboard();
+}
+async function addHallOfFame() {
+
+    let tournament =
+    document.getElementById("hofTournament").value;
+
+    let champion =
+    document.getElementById("hofChampion").value;
+
+    let year =
+    document.getElementById("hofYear").value;
+
+    const { error } =
+    await supabaseClient
+    .from("halloffame")
+    .insert([
+        {
+            tournament: tournament,
+            champion: champion,
+            year: year
+        }
+    ]);
+
+    if(error){
+        alert("Failed to add champion");
+        console.log(error);
+        return;
+    }
+
+    loadHallOfFame();
+}
+
+async function loadHallOfFame() {
+
+    const { data, error } =
+    await supabaseClient
+    .from("halloffame")
+    .select("*")
+    .order("year", {
+        ascending: false
+    });
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById(
+        "adminHallOfFameList"
+    );
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    data.forEach(item => {
+
+        let card =
+        document.createElement("div");
+
+        card.className = "card";
+
+        card.innerHTML =
+        "🏆 " + item.tournament +
+        " (" + item.year + ")" +
+        "<br>" +
+        "Champion: " + item.champion +
+        "<br><br>" +
+        "<button onclick='deleteHallOfFame(" +
+        item.id +
+        ")'>Delete</button>";
+
+        container.appendChild(card);
+
+    });
+}
+
+async function deleteHallOfFame(id) {
+
+    const { error } =
+    await supabaseClient
+    .from("halloffame")
+    .delete()
+    .eq("id", id);
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    loadHallOfFame();
+}
 // LOGOUT
 function logout() {
 
@@ -301,3 +498,5 @@ function logout() {
 loadPlayers();
 loadTournaments();
 loadFixtures();
+loadLeaderboard();
+loadHallOfFame();
