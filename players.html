@@ -1,32 +1,82 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Player Profiles</title>
 <link rel="stylesheet" href="style.css">
 </head>
-<body><header class="hero">
-    <h1>Bunyala Efootball Gamers</h1>
-    <p>Player Profiles</p><a href="index.html">
-    <button>Home</button>
-</a>
+<body>
 
-</header><section>
-    <h2>Top Players</h2><div class="card">
-    <h3>Mike</h3>
-    <p>Team: Arsenal</p>
-    <p>Rating: 95</p>
-    <p>Wins: 20</p>
-    <p>Losses: 5</p>
-</div>
+<header class="hero">
+    <h1>Player Profiles</h1>
 
-<div class="card">
-    <h3>Bruzzwilliams</h3>
-    <p>Team: Manchester City</p>
-    <p>Rating: 93</p>
-    <p>Wins: 18</p>
-    <p>Losses: 7</p>
-</div>
+    <a href="index.html">
+        <button>Home</button>
+    </a>
+</header>
 
-</section></body>
+<section>
+
+    <h2>Create Profile</h2>
+
+    <input id="username"
+           type="text"
+           placeholder="Username">
+
+    <br><br>
+
+    <input id="fullname"
+           type="text"
+           placeholder="Full Name">
+
+    <br><br>
+
+    <input id="club"
+           type="text"
+           placeholder="Favorite Club">
+
+    <br><br>
+
+    <input id="country"
+           type="text"
+           placeholder="Country">
+
+    <br><br>
+
+    <input id="rating"
+           type="number"
+           placeholder="Rating">
+
+    <br><br>
+
+    <input id="photo"
+           type="text"
+           placeholder="Photo URL">
+
+    <br><br>
+
+    <textarea id="bio"
+              placeholder="Bio"></textarea>
+
+    <br><br>
+
+    <button onclick="saveProfile()">
+        Save Profile
+    </button>
+
+</section>
+
+<section>
+
+    <h2>Players</h2>
+
+    <div id="profilesList"></div>
+
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="players.js"></script>
+
+</body>
 </html>
