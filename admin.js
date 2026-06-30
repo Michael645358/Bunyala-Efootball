@@ -1,3 +1,11 @@
+if (
+localStorage.getItem(
+"adminLoggedIn"
+) !== "true"
+) {
+window.location.href =
+"login.html";
+}
 const SUPABASE_URL =
 "https://gwncuzcafdcorfenrqyr.supabase.co";
 
@@ -35,8 +43,9 @@ data.forEach(player => {
 
     card.className = "card";
 
-    card.innerHTML =
-    "<h3>" + player.username + "</h3>";
+card.innerHTML =
+"<h3>" + player.username + "</h3>" +
+"<button onclick='deletePlayer(" + player.id + ")'>Remove</button>";
 
     container.appendChild(card);
 
@@ -57,6 +66,35 @@ document.getElementById(
 "✅ Tournament Created: " +
 tournament;
 
+}
+
+loadPlayers();
+async function deletePlayer(id) {
+
+const confirmDelete =
+confirm("Remove this player?");
+
+if(!confirmDelete) return;
+
+const { error } =
+await supabaseClient
+.from("players")
+.delete()
+.eq("id", id);
+
+if(error){
+    alert("Failed to remove player");
+    console.log(error);
+    return;
+}
+
+loadPlayers();
+
+}
+
+function logout() {
+localStorage.removeItem("adminLoggedIn");
+window.location.href = "login.html";
 }
 
 loadPlayers();
