@@ -100,9 +100,11 @@ async function loadTournament() {
         return;
     }
 
-    let tournament = data[0];
+container.innerHTML = "";
 
-    container.innerHTML =
+data.forEach(tournament => {
+
+    container.innerHTML +=
     "<div class='card'>" +
     "<h3>" + tournament.title + "</h3>" +
     "<p>Entry Fee: KSh " +
@@ -112,6 +114,8 @@ async function loadTournament() {
     tournament.prize_pool +
     "</p>" +
     "</div>";
+
+});
 }
 
 loadPlayers();
