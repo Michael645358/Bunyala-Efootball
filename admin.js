@@ -1,11 +1,7 @@
-if (
-localStorage.getItem(
-"adminLoggedIn"
-) !== "true"
-) {
-window.location.href =
-"login.html";
+if (localStorage.getItem("adminLoggedIn") !== "true") {
+    window.location.href = "login.html";
 }
+
 const SUPABASE_URL =
 "https://gwncuzcafdcorfenrqyr.supabase.co";
 
@@ -14,87 +10,202 @@ const SUPABASE_KEY =
 
 const supabaseClient =
 supabase.createClient(
-SUPABASE_URL,
-SUPABASE_KEY
+    SUPABASE_URL,
+    SUPABASE_KEY
 );
 
+// LOAD PLAYERS
 async function loadPlayers() {
 
-const { data, error } =
-await supabaseClient
-.from("players")
-.select("*")
-.order("id");
+    const { data, error } =
+    await supabaseClient
+    .from("players")
+    .select("*")
+    .order("id");
 
-if(error){
-    console.log(error);
-    return;
+    if (error) {
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById("adminPlayers");
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    data.forEach(player => {
+
+        let card =
+        document.createElement("div");
+
+        card.className = "card";
+
+        card.innerHTML =
+        "<h3>" + player.username + "</h3>" +
+        "<button onclick='deletePlayer(" +
+        player.id +
+        ")'>Remove</button>";
+
+        container.appendChild(card);
+
+    });
 }
 
-let container =
-document.getElementById("adminPlayers");
-
-container.innerHTML = "";
-
-data.forEach(player => {
-
-    let card =
-    document.createElement("div");
-
-    card.className = "card";
-
-card.innerHTML =
-"<h3>" + player.username + "</h3>" +
-"<button onclick='deletePlayer(" + player.id + ")'>Remove</button>";
-
-    container.appendChild(card);
-
-});
-
-}
-
-function createTournament(){
-
-let tournament =
-document.getElementById(
-"tournamentName"
-).value;
-
-document.getElementById(
-"tournamentMessage"
-).innerHTML =
-"✅ Tournament Created: " +
-tournament;
-
-}
-
-loadPlayers();
+// DELETE PLAYER
 async function deletePlayer(id) {
 
-const confirmDelete =
-confirm("Remove this player?");
+    const confirmDelete =
+    confirm("Remove this player?");
 
-if(!confirmDelete) return;
+    if (!confirmDelete) return;
 
-const { error } =
-await supabaseClient
-.from("players")
-.delete()
-.eq("id", id);
+    const { error } =
+    await supabaseClient
+    .from("players")
+    .delete()
+    .eq("id", id);
 
-if(error){
-    alert("Failed to remove player");
-    console.log(error);
-    return;
+    if (error) {
+        alert("Failed to remove player");
+        console.log(error);
+        return;
+    }
+
+    loadPlayers();
 }
 
-loadPlayers();
+// CREATE TOURNAMENT
+async function createTournament() {
 
+    let title =
+    document.getElementById("tournamentName").value;
+
+    let entryFee =
+    document.getElementById("entryFee").value;
+
+    let prizePool =
+    document.getElementById("prizePool").value;
+
+    const { error } =
+    await supabaseClient
+    .from("tournaments")
+    .insert([
+        {
+            title: title,
+            entry_fee: entryFee,
+            prize_pool: prizePool
+        }
+    ]);
+
+    if (error) {
+        console.log(error);
+        alert("Failed to create tournament");
+        return;
+    }
+
+    document.getElementById(
+        "tournamentMessage"
+    ).innerHTML =
+    "✅ Tournament Created";
+
+    document.getElementById(
+        "tournamentName"
+    ).value = "";
+
+    document.getElementById(
+        "entryFee"
+    ).value = "";
+
+    document.getElementById(
+        "prizePool"
+    ).value = "";
+
+    loadTournaments();
 }
 
+// LOAD TOURNAMENTS
+async function loadTournaments() {
+
+    const { data, error } =
+    await supabaseClient
+    .from("tournaments")
+    .select("*")
+    .order("id");
+
+    if (error) {
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById(
+        "tournamentsList"
+    );
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    data.forEach(tournament => {
+
+        let card =
+        document.createElement("div");
+
+        card.className = "card";
+
+        card.innerHTML =
+        "<h3>" + tournament.title + "</h3>" +
+        "<p>Fee: KSh " +
+        tournament.entry_fee +
+        "</p>" +
+        "<p>Prize: KSh " +
+        tournament.prize_pool +
+        "</p>" +
+        "<button onclick='deleteTournament(" +
+        tournament.id +
+        ")'>Delete</button>";
+
+        container.appendChild(card);
+
+    });
+}
+
+// DELETE TOURNAMENT
+async function deleteTournament(id) {
+
+    const confirmDelete =
+    confirm("Delete tournament?");
+
+    if (!confirmDelete) return;
+
+    const { error } =
+    await supabaseClient
+    .from("tournaments")
+    .delete()
+    .eq("id", id);
+
+    if (error) {
+        console.log(error);
+        alert("Failed to delete tournament");
+        return;
+    }
+
+    loadTournaments();
+}
+
+// LOGOUT
 function logout() {
-localStorage.removeItem("adminLoggedIn");
-window.location.href = "login.html";
+
+    localStorage.removeItem(
+        "adminLoggedIn"
+    );
+
+    window.location.href =
+    "login.html";
 }
 
+// START
 loadPlayers();
+loadTournaments();
