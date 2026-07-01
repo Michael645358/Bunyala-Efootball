@@ -10,6 +10,7 @@ function joinTournament() {
     alert("Tournament registration is open!");
 }
 
+
 async function registerPlayer() {
 
     let username =
@@ -20,35 +21,41 @@ async function registerPlayer() {
         return;
     }
 
-    const { error } =
-    await supabaseClient
-    .from("players")
-    .insert([
-        {
-            username: username
-        }
-    ]);
+const { data, error } =
+await supabaseClient
+.from("playerprofiles")
+.insert([
+    {
+        username: username
+    }
+])
+.select();
+
+console.log(data);
+console.log(error);
 
     if (error) {
-    alert(error.message);
-    console.log(error);
-    return;
-}
+        alert(error.message);
+        console.log(error);
+        return;
     }
 
     document.getElementById("message").innerHTML =
-    "✅ " + username + " registered successfully!";
+"✅ " + username + " registered successfully!";
+
+setTimeout(() => {
+    document.getElementById("message").innerHTML = "";
+}, 3000);
 
     document.getElementById("username").value = "";
 
     loadPlayers();
 }
-
 async function loadPlayers() {
 
     const { data, error } =
     await supabaseClient
-    .from("players")
+    .from("playerprofiles")
     .select("*")
     .order("id");
 
@@ -70,7 +77,9 @@ async function loadPlayers() {
         document.createElement("div");
 
         card.className = "card";
-        card.textContent = player.username;
+
+        card.innerHTML =
+        player.username;
 
         playersList.appendChild(card);
 
