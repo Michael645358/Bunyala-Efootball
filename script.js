@@ -30,9 +30,10 @@ async function registerPlayer() {
     ]);
 
     if (error) {
-        alert("Registration failed");
-        console.log(error);
-        return;
+    alert(error.message);
+    console.log(error);
+    return;
+}
     }
 
     document.getElementById("message").innerHTML =
@@ -233,9 +234,49 @@ async function loadHallOfFame() {
 
     });
 }
+async function loadResults() {
 
+    const { data, error } =
+    await supabaseClient
+    .from("results")
+    .select("*")
+    .order("id", { ascending: false });
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById("homeResultsList");
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    if(data.length === 0){
+        container.innerHTML =
+        "<div class='card'>No results available</div>";
+        return;
+    }
+
+    data.forEach(result => {
+
+        container.innerHTML +=
+        "<div class='card'>" +
+        result.player1 + " " +
+        result.score1 + " - " +
+        result.score2 + " " +
+        result.player2 +
+        "<br>🏆 Winner: " +
+        result.winner +
+        "</div>";
+
+    });
+}
 loadPlayers();
 loadTournament();
 loadHomeFixtures();
 loadLeaderboard();
 loadHallOfFame();
+loadResults();

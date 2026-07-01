@@ -1,11 +1,14 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard</title>
 <link rel="stylesheet" href="style.css">
 </head>
-<body><header class="hero">
+<body>
+
+<header class="hero">
     <h1>Admin Dashboard</h1>
     <p>Bunyala Efootball Gamers</p>
 
@@ -18,10 +21,14 @@
     <button onclick="logout()">
         Logout
     </button>
-</header><section>
+</header>
+
+<section>
     <h2>Registered Players</h2>
     <div id="adminPlayers"></div>
-</section><section>
+</section>
+
+<section>
     <h2>Create Tournament</h2>
 
     <input id="tournamentName"
@@ -48,17 +55,21 @@
 
     <p id="tournamentMessage"></p>
 
-<div id="tournamentsList"></div>
+    <div id="tournamentsList"></div>
 </section>
 
 <section>
     <h2>Create Fixture</h2>
 
-    <input id="player1" type="text" placeholder="Player 1">
+    <input id="player1"
+           type="text"
+           placeholder="Player 1">
 
     <br><br>
 
-    <input id="player2" type="text" placeholder="Player 2">
+    <input id="player2"
+           type="text"
+           placeholder="Player 2">
 
     <br><br>
 
@@ -67,7 +78,47 @@
     </button>
 
     <div id="fixturesAdminList"></div>
-  <section>
+</section><section>
+    <h2>Match Results</h2>
+
+    <input id="resultPlayer1"
+           type="text"
+           placeholder="Player 1">
+
+    <br><br>
+
+    <input id="resultPlayer2"
+           type="text"
+           placeholder="Player 2">
+
+    <br><br>
+
+    <input id="score1"
+           type="number"
+           placeholder="Score 1">
+
+    <br><br>
+
+    <input id="score2"
+           type="number"
+           placeholder="Score 2">
+
+    <br><br>
+
+    <input id="winner"
+           type="text"
+           placeholder="Winner">
+
+    <br><br>
+
+    <button onclick="addResult()">
+        Save Result
+    </button>
+
+    <div id="resultsAdminList"></div>
+</section>
+
+<section>
     <h2>Leaderboard</h2>
 
     <input id="leaderboardUsername"
@@ -87,13 +138,7 @@
     </button>
 
     <div id="adminLeaderboardList"></div>
-</section>  <section>
-    <h2>Leaderboard</h2>
-    ...
-    <div id="adminLeaderboardList"></div>
 </section>
-
-<!-- PASTE HALL OF FAME SECTION HERE -->
 
 <section>
     <h2>Hall of Fame</h2>
@@ -123,10 +168,53 @@
     <div id="adminHallOfFameList"></div>
 </section>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="admin.js"></script>
+<section>
+    <h2>Payments</h2>
+    <div id="paymentsList"></div>
+</section>
+
+<section>
+    <h2>Match Results</h2>
+
+    <input id="resultPlayer1"
+           type="text"
+           placeholder="Player 1">
+
+    <br><br>
+
+    <input id="resultScore1"
+           type="number"
+           placeholder="Score 1">
+
+    <br><br>
+
+    <input id="resultScore2"
+           type="number"
+           placeholder="Score 2">
+
+    <br><br>
+
+    <input id="resultPlayer2"
+           type="text"
+           placeholder="Player 2">
+
+    <br><br>
+
+    <input id="resultWinner"
+           type="text"
+           placeholder="Winner">
+
+    <br><br>
+
+    <button onclick="addResult()">
+        Add Result
+    </button>
+
+    <div id="adminResultsList"></div>
+</section>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="admin.js"></script>
+
 </body>
 </html>

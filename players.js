@@ -1,52 +1,32 @@
-const SUPABASE_URL =
-"https://gwncuzcafdcorfenrqyr.supabase.co";
+const SUPABASE_URL = "https://gwncuzcafdcorfenrqyr.supabase.co";
+const SUPABASE_KEY = "sb_publishable_EnMAhkA4dWpUuJYYdpizhg_VQ6CDG4z";
 
-const SUPABASE_KEY =
-"sb_publishable_EnMAhkA4dWpUuJYYdpizhg_VQ6CDG4z";
-
-const supabaseClient =
-supabase.createClient(
+const supabaseClient = supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
 );
 
 async function saveProfile() {
 
-    let username =
-    document.getElementById("username").value;
+    let username = document.getElementById("username").value;
+    let fullname = document.getElementById("fullname").value;
+    let club = document.getElementById("club").value;
+    let country = document.getElementById("country").value;
+    let rating = document.getElementById("rating").value;
+    let photo = document.getElementById("photo").value;
+    let bio = document.getElementById("bio").value;
 
-    let fullname =
-    document.getElementById("fullname").value;
-
-    let club =
-    document.getElementById("club").value;
-
-    let country =
-    document.getElementById("country").value;
-
-    let rating =
-    document.getElementById("rating").value;
-
-    let photo =
-    document.getElementById("photo").value;
-
-    let bio =
-    document.getElementById("bio").value;
-
-    const { error } =
-    await supabaseClient
-    .from("player_profiles")
-    .insert([
-        {
-            username: username,
-            fullname: fullname,
-            club: club,
-            country: country,
-            rating: rating,
-            photo: photo,
-            bio: bio
-        }
-    ]);
+    const { error } = await supabaseClient
+        .from("player_profiles")
+        .insert([{
+            username,
+            fullname,
+            club,
+            country,
+            rating,
+            photo,
+            bio
+        }]);
 
     if(error){
         alert("Failed to save profile");
@@ -55,25 +35,22 @@ async function saveProfile() {
     }
 
     alert("Profile saved successfully");
-
     loadProfiles();
 }
 
 async function loadProfiles() {
 
-    const { data, error } =
-    await supabaseClient
-    .from("player_profiles")
-    .select("*")
-    .order("id");
+    const { data, error } = await supabaseClient
+        .from("player_profiles")
+        .select("*")
+        .order("id");
 
     if(error){
         console.log(error);
         return;
     }
 
-    let container =
-    document.getElementById("profilesList");
+    let container = document.getElementById("profilesList");
 
     if(!container) return;
 
@@ -81,43 +58,20 @@ async function loadProfiles() {
 
     data.forEach(profile => {
 
-        let card =
-        document.createElement("div");
+        let card = document.createElement("div");
 
         card.className = "card";
 
         card.innerHTML =
-
-        "<img src='" +
-        profile.photo +
-        "' width='100'>" +
-
-        "<h3>" +
-        profile.username +
-        "</h3>" +
-
-        "<p><b>Name:</b> " +
-        profile.fullname +
-        "</p>" +
-
-        "<p><b>Club:</b> " +
-        profile.club +
-        "</p>" +
-
-        "<p><b>Country:</b> " +
-        profile.country +
-        "</p>" +
-
-        "<p><b>Rating:</b> " +
-        profile.rating +
-        "</p>" +
-
-        "<p>" +
-        profile.bio +
-        "</p>";
+            "<img src='" + profile.photo + "' width='100'>" +
+            "<h3>" + profile.username + "</h3>" +
+            "<p><b>Name:</b> " + profile.fullname + "</p>" +
+            "<p><b>Club:</b> " + profile.club + "</p>" +
+            "<p><b>Country:</b> " + profile.country + "</p>" +
+            "<p><b>Rating:</b> " + profile.rating + "</p>" +
+            "<p>" + profile.bio + "</p>";
 
         container.appendChild(card);
-
     });
 }
 

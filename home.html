@@ -1,0 +1,70 @@
+<!DOCTYPE html><html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bunyala Efootball Gamers</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body><header class="hero">
+    <h1>Bunyala Efootball Gamers</h1>
+    <p>Compete • Win • Become a Champion</p><button onclick="joinTournament()">Join Tournament</button>
+<a href="payment.html">
+    <button>M-Pesa Registration</button>
+</a>
+
+<br><br>
+
+<a href="https://chat.whatsapp.com/CZOT5N22jJAA6OQd2nZAyY" target="_blank">
+    <button>Join WhatsApp Group</button>
+</a>
+
+<br><br>
+
+<a href="fixtures.html">
+    <button>View Fixtures</button>
+</a>
+
+<br><br>
+
+<a href="players.html">
+    <button>Player Profiles</button>
+</a>
+
+<br><br>
+
+<a href="admin.html">
+    <button>Admin Dashboard</button>
+</a>
+
+</header><section>
+    <h2>Player Registration</h2><input id="username" type="text" placeholder="Enter Username">
+
+<button onclick="registerPlayer()">Register</button>
+
+<p id="message"></p>
+
+</section><section>
+    <h2>Registered Players</h2>
+    <div id="playersList"></div>
+</section><section>
+    <h2>Upcoming Tournament</h2>
+    <div id="tournamentDisplay"></div>
+</section><section>
+    <h2>Current Fixtures</h2>
+    <div id="homeFixturesList"></div>
+    <section>
+    <h2>Latest Match Results</h2>
+
+    <div id="homeResultsList"></div>
+</section>
+
+</section>
+</section><section>
+    <h2>Leaderboard</h2>
+    <div id="leaderboardList"></div>
+</section><section>
+    <h2>Hall of Fame</h2>
+    <div id="hallOfFameList"></div>
+</section><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="script.js"></script></body>
+</html>

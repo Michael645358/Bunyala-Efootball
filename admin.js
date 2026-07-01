@@ -483,6 +483,260 @@ async function deleteHallOfFame(id) {
 
     loadHallOfFame();
 }
+async function loadPayments() {
+
+    const { data, error } =
+    await supabaseClient
+    .from("payments")
+    .select("*")
+    .order("id", { ascending: false });
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById("paymentsList");
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    data.forEach(payment => {
+
+        let card =
+        document.createElement("div");
+
+        card.className = "card";
+
+        card.innerHTML =
+        "<h3>" + payment.name + "</h3>" +
+        "<p>Phone: " + payment.phone + "</p>" +
+        "<p>Amount: KSh " + payment.amount + "</p>" +
+        "<p>Status: " + payment.status + "</p>" +
+        "<button onclick='approvePayment(" +
+        payment.id +
+        ")'>Approve</button> " +
+        "<button onclick='deletePayment(" +
+        payment.id +
+        ")'>Delete</button>";
+
+        container.appendChild(card);
+
+    });
+}
+
+async function approvePayment(id) {
+
+    const { error } =
+    await supabaseClient
+    .from("payments")
+    .update({
+        status: "Paid"
+    })
+    .eq("id", id);
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    loadPayments();
+}
+
+async function deletePayment(id) {
+
+    const { error } =
+    await supabaseClient
+    .from("payments")
+    .delete()
+    .eq("id", id);
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    loadPayments();
+}
+async function addResult() {
+
+    let player1 =
+    document.getElementById("resultPlayer1").value;
+
+    let player2 =
+    document.getElementById("resultPlayer2").value;
+
+    let score1 =
+    document.getElementById("score1").value;
+
+    let score2 =
+    document.getElementById("score2").value;
+
+    let winner =
+    document.getElementById("winner").value;
+
+    const { error } =
+    await supabaseClient
+    .from("results")
+    .insert([
+        {
+            player1: player1,
+            player2: player2,
+            score1: score1,
+            score2: score2,
+            winner: winner
+        }
+    ]);
+
+    if(error){
+        alert("Failed to save result");
+        console.log(error);
+        return;
+    }
+
+    document.getElementById("resultPlayer1").value = "";
+    document.getElementById("resultPlayer2").value = "";
+    document.getElementById("score1").value = "";
+    document.getElementById("score2").value = "";
+    document.getElementById("winner").value = "";
+
+    loadResults();
+}
+
+async function loadResults() {
+
+    const { data, error } =
+    await supabaseClient
+    .from("results")
+    .select("*")
+    .order("id", { ascending: false });
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById("resultsAdminList");
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    data.forEach(result => {
+
+        let card =
+        document.createElement("div");
+
+        card.className = "card";
+
+        card.innerHTML =
+        result.player1 +
+        " " + result.score1 +
+        " - " + result.score2 + " " +
+        result.player2 +
+        "<br>Winner: " +
+        result.winner +
+        "<br><br>" +
+        "<button onclick='deleteResult(" +
+        result.id +
+        ")'>Delete</button>";
+
+        container.appendChild(card);
+
+    });
+}
+
+async function deleteResult(id) {
+
+    const { error } =
+    await supabaseClient
+    .from("results")
+    .delete()
+    .eq("id", id);
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    loadResults();
+}
+
+async function addResult() {
+
+    const { error } =
+    await supabaseClient
+    .from("results")
+    .insert([
+        {
+            player1: document.getElementById("resultPlayer1").value,
+            player2: document.getElementById("resultPlayer2").value,
+            score1: document.getElementById("resultScore1").value,
+            score2: document.getElementById("resultScore2").value,
+            winner: document.getElementById("resultWinner").value
+        }
+    ]);
+
+    if(error){
+        alert("Failed to add result");
+        console.log(error);
+        return;
+    }
+
+    loadResultsAdmin();
+}
+
+async function loadResultsAdmin() {
+
+    const { data, error } =
+    await supabaseClient
+    .from("results")
+    .select("*")
+    .order("id", { ascending: false });
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById("adminResultsList");
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    data.forEach(result => {
+
+        container.innerHTML +=
+        "<div class='card'>" +
+        result.player1 + " " +
+        result.score1 + "-" +
+        result.score2 + " " +
+        result.player2 +
+        "<br>Winner: " +
+        result.winner +
+        "<br><br>" +
+        "<button onclick='deleteResult(" +
+        result.id +
+        ")'>Delete</button>" +
+        "</div>";
+
+    });
+}
+
+async function deleteResult(id) {
+
+    await supabaseClient
+    .from("results")
+    .delete()
+    .eq("id", id);
+
+    loadResultsAdmin();
+}9
 // LOGOUT
 function logout() {
 
@@ -500,3 +754,5 @@ loadTournaments();
 loadFixtures();
 loadLeaderboard();
 loadHallOfFame();
+loadPayments();
+loadResultsAdmin();
