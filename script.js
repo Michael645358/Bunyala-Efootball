@@ -190,22 +190,31 @@ async function loadLeaderboard() {
 
     data.forEach((player, index) => {
 
-        let medal = "";
+    let medal = "";
+    let extraClass = "";
 
-        if(index === 0) medal = "🥇";
-        else if(index === 1) medal = "🥈";
-        else if(index === 2) medal = "🥉";
+    if(index === 0){
+        medal = "🥇";
+        extraClass = "gold";
+    }
+    else if(index === 1){
+        medal = "🥈";
+        extraClass = "silver";
+    }
+    else if(index === 2){
+        medal = "🥉";
+        extraClass = "bronze";
+    }
 
-        container.innerHTML +=
-        "<div class='card'>" +
-        medal + " " +
-        player.username +
-        " - " +
-        player.points +
-        " Points" +
-        "</div>";
-
-    });
+    container.innerHTML +=
+    "<div class='card " + extraClass + "'>" +
+    medal + " " +
+    player.username +
+    "<br>" +
+    player.points +
+    " Points" +
+    "</div>";
+});
 }
 async function loadHallOfFame() {
 
@@ -283,9 +292,69 @@ async function loadResults() {
 
     });
 }
-loadPlayers();
+async function loadApprovedPayments() {
+
+    const { data, error } =
+    await supabaseClient
+    .from("payments")
+    .select("*")
+    .eq("status", "Paid")
+    .order("id", { ascending: false });
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    let container =
+    document.getElementById("approvedPaymentsList");
+
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    if(data.length === 0){
+        container.innerHTML =
+        "<div class='card'>No paid participants yet</div>";
+        return;
+    }
+
+    data.forEach(payment => {
+
+        container.innerHTML +=
+        "<div class='card'>✅ " +
+        payment.name +
+        "</div>";
+
+    });
+}
+
+loadPlayers();function searchPlayers() {
+
+    let input =
+    document.getElementById("playerSearch")
+    .value
+    .toLowerCase();
+
+    let cards =
+    document.querySelectorAll("#playersList .card");
+
+    cards.forEach(card => {
+
+        let text =
+        card.innerText.toLowerCase();
+
+        if(text.includes(input)){
+            card.style.display = "";
+        } else {
+            card.style.display = "none";
+        }
+
+    });
+}
 loadTournament();
 loadHomeFixtures();
 loadLeaderboard();
 loadHallOfFame();
 loadResults();
+loadApprovedPayments();
