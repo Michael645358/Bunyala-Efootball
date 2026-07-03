@@ -19,7 +19,7 @@ async function loadPlayers() {
 
     const { data, error } =
     await supabaseClient
-    .from("playerprofiles")
+    .from("player_profiles")
     .select("*")
     .order("id");
 
@@ -35,30 +35,55 @@ async function loadPlayers() {
 
     container.innerHTML = "";
 
-    data.forEach(player => {
+data.forEach(player => {
 
-        container.innerHTML +=
-        "<div class='card'>" +
-        "<h3>" + player.username + "</h3>" +
-        "<button onclick='deletePlayer(" +
-        player.id +
-        ")'>Remove</button>" +
-        "</div>";
+    container.innerHTML +=
+    "<div class='card'>" +
+    "<h3>" +
+    player.username +
+    (player.verified ? " ✅" : "") +
+    "</h3>" +
+    "<button onclick='verifyPlayer(" +
+    player.id +
+    ")'>Verify</button> " +
+    "<button onclick='deletePlayer(" +
+    player.id +
+    ")'>Remove</button>" +
+    "</div>";
 
-    });
+});
+
 }
-
 // DELETE PLAYER
 async function deletePlayer(id) {
 
     await supabaseClient
-    .from("playerprofiles")
+    .from("player_profiles")
     .delete()
     .eq("id", id);
 
     loadPlayers();
 }
+async function verifyPlayer(id) {
 
+    const { error } =
+    await supabaseClient
+    .from("player_profiles")
+    .update({
+        verified: true
+    })
+    .eq("id", id);
+
+    if(error){
+        console.log(error);
+        alert("Failed to verify player");
+        return;
+    }
+
+    alert("✅ Player verified");
+
+    loadPlayers();
+}
 // CREATE TOURNAMENT
 async function createTournament() {
 
@@ -376,16 +401,32 @@ async function deleteHallOfFame(id) {
 }
 // ADD RESULT
 async function addResult() {
+
+    let player1 =
+    document.getElementById("resultPlayer1").value;
+
+    let player2 =
+    document.getElementById("resultPlayer2").value;
+
+    let score1 =
+    parseInt(document.getElementById("score1").value);
+
+    let score2 =
+    parseInt(document.getElementById("score2").value);
+
+    let winner =
+    document.getElementById("winner").value;
+
     const { error } =
     await supabaseClient
     .from("results")
     .insert([
         {
-            player1: document.getElementById("resultPlayer1").value,
-            player2: document.getElementById("resultPlayer2").value,
-            score1: document.getElementById("score1").value,
-            score2: document.getElementById("score2").value,
-            winner: document.getElementById("winner").value
+            player1,
+            player2,
+            score1,
+            score2,
+            winner
         }
     ]);
 
@@ -395,11 +436,52 @@ async function addResult() {
         return;
     }
 
+    // UPDATE PLAYER STATS
+
+    if(score1 > score2){
+
+        await supabaseClient.rpc(
+            "increment_wins",
+            { username_input: player1 }
+        );
+
+        await supabaseClient.rpc(
+            "increment_losses",
+            { username_input: player2 }
+        );
+
+    }
+    else if(score2 > score1){
+
+        await supabaseClient.rpc(
+            "increment_wins",
+            { username_input: player2 }
+        );
+
+        await supabaseClient.rpc(
+            "increment_losses",
+            { username_input: player1 }
+        );
+
+    }
+    else{
+
+        await supabaseClient.rpc(
+            "increment_draws",
+            { username_input: player1 }
+        );
+
+        await supabaseClient.rpc(
+            "increment_draws",
+            { username_input: player2 }
+        );
+
+    }
+
     alert("✅ Result saved");
 
     loadResults();
 }
-
 // LOAD RESULTS
 async function loadResults() {
 
@@ -471,22 +553,22 @@ async function loadPayments() {
 
     data.forEach(payment => {
 
-        container.innerHTML +=
-        "<div class='card'>" +
-        "<b>" + payment.name + "</b>" +
-        "<br>Phone: " + payment.phone +
-        "<br>Amount: KSh " + payment.amount +
-        "<br>Status: " + payment.status +
-        "<br><br>" +
-        "<button onclick='approvePayment(" +
-payment.id +
-")'>Approve</button> " +
-"<button onclick='deletePayment(" +
-payment.id +
-")'>Delete</button>"
-        "</div>";
+    container.innerHTML +=
+    "<div class='card'>" +
+    "<b>" + payment.name + "</b>" +
+    "<br>Phone: " + payment.phone +
+    "<br>Amount: KSh " + payment.amount +
+    "<br>Status: " + payment.status +
+    "<br><br>" +
+    "<button onclick='approvePayment(" +
+    payment.id +
+    ")'>Approve</button> " +
+    "<button onclick='deletePayment(" +
+    payment.id +
+    ")'>Delete</button>" +
+    "</div>";
 
-    });
+});
 }
 
 // APPROVE PAYMENT

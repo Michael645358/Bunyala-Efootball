@@ -23,7 +23,7 @@ async function registerPlayer() {
 
 const { data, error } =
 await supabaseClient
-.from("playerprofiles")
+.from("player_profiles")
 .insert([
     {
         username: username
@@ -55,7 +55,7 @@ async function loadPlayers() {
 
     const { data, error } =
     await supabaseClient
-    .from("playerprofiles")
+    .from("player_profiles")
     .select("*")
     .order("id");
 
@@ -286,8 +286,9 @@ async function loadResults() {
         result.score1 + " - " +
         result.score2 + " " +
         result.player2 +
-        "<br>🏆 Winner: " +
-        result.winner +
+        (result.score1 == result.score2
+? "<br>🤝 Draw"
+: "<br>🏆 Winner: " + result.winner)
         "</div>";
 
     });

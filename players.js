@@ -21,10 +21,37 @@ async function saveProfile() {
     document.getElementById("country").value;
 
     let rating =
-    document.getElementById("rating").value;
+document.getElementById("rating").value;
 
-    let photo =
-    document.getElementById("photo").value;
+    const file =
+document.getElementById("photo").files[0];
+
+let photo = "";
+
+if(file){
+
+    const fileName =
+    Date.now() + "-" + file.name;
+
+    const { error: uploadError } =
+    await supabaseClient.storage
+    .from("player-images")
+    .upload(fileName, file);
+
+    if(uploadError){
+    alert(uploadError.message);
+    console.log(uploadError);
+    return;
+}
+    
+
+    const { data } =
+    supabaseClient.storage
+    .from("player-images")
+    .getPublicUrl(fileName);
+
+    photo = data.publicUrl;
+}
 
     let bio =
     document.getElementById("bio").value;
@@ -92,22 +119,45 @@ async function loadProfiles() {
     container.innerHTML = "";
 
     data.forEach(profile => {
+        let rank = "Amateur ⚽";
+
+if(profile.rating >= 3000){
+    rank = "Legend 👑";
+}
+else if(profile.rating >= 2500){
+    rank = "Elite 🔥";
+}
+else if(profile.rating >= 2000){
+    rank = "Pro ⭐";
+}
 
         let card = document.createElement("div");
 
         card.className = "card";
 
         card.innerHTML =
-            "<img src='" + profile.photo + "' width='100'>" +
-            "<h3>" + profile.username + "</h3>" +
+    "<img src='" + profile.photo + "' width='100'>" +
 
-            "<button onclick='editProfile(" +
-            profile.id +
-            ")'>Edit</button> " +
+    "<h3>" +
+    profile.username +
+    (profile.verified ? " ✅" : "") +
+    "</h3>" +
 
-            "<button onclick='deleteProfile(" +
-            profile.id +
-            ")'>Delete</button>";
+    "<p><b>" + rank + "</b></p>" +
+
+    "<p>⭐ Rating: " + profile.rating + "</p>" +"<p>🏆 Wins: " + (profile.wins || 0) + "</p>" +
+"<p>❌ Losses: " + (profile.losses || 0) + "</p>" +
+"<p>🤝 Draws: " + (profile.draws || 0) + "</p>" +
+"<p>⚽ Club: " + profile.club + "</p>" +
+"<p>🌍 Country: " + profile.country + "</p>" +
+
+    "<button onclick='editProfile(" +
+    profile.id +
+    ")'>Edit</button> " +
+
+    "<button onclick='deleteProfile(" +
+    profile.id +
+    ")'>Delete</button>";
 
         container.appendChild(card);
 

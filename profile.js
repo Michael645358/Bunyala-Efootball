@@ -5,7 +5,7 @@ async function updateProfile() {
 
     const { error } =
     await supabaseClient
-    .from("playerprofiles")
+    .from("player_profiles")
     .update({
         real_name:
         document.getElementById("realName").value,
