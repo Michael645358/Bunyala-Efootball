@@ -1,610 +1,907 @@
-if (localStorage.getItem("adminLoggedIn") !== "true") {
-    window.location.href = "login.html";
+// Server-authenticated admin guard (Supabase Auth + role).
+if (window.RihulaAdmin) {
+    RihulaAdmin.requireAdmin();
 }
 
-const SUPABASE_URL =
-"https://gwncuzcafdcorfenrqyr.supabase.co";
+async function loadStats() {
 
-const SUPABASE_KEY =
-"sb_publishable_EnMAhkA4dWpUuJYYdpizhg_VQ6CDG4z";
+    const { count: memberCount } = await db
+        .from("members")
+        .select("*", { count: "exact", head: true });
 
-const supabaseClient =
-supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
+    document.getElementById("totalMembers").innerText =
+        memberCount || 0;
 
-// LOAD PLAYERS
-async function loadPlayers() {
+    const { data: contributions, error } = await db
+        .from("contributions")
+        .select("amount");
 
-    const { data, error } =
-    await supabaseClient
-    .from("player_profiles")
-    .select("*")
-    .order("id");
+    console.log("Contributions Data:", contributions);
+    console.log("Contributions Error:", error);
+
+    let total = 0;
+
+    (contributions || []).forEach(item => {
+        total += Number(item.amount || 0);
+    });
+
+    console.log("Total Contributions:", total);
+
+    document.getElementById("totalSavings").innerText =
+        "KSh " + total.toLocaleString();
+}
+
+async function loadGroupSavings() {
+
+    const { data, error } = await db
+        .from("contributions")
+        .select("amount");
+
+    if (error) return;
+
+    let total = 0; 
+if (true) {
+    
+}
+    data.forEach(item => {
+        total += Number(item.amount);
+    });
+
+    const adminElement =
+        document.getElementById("adminGroupSavings");
+
+    if (adminElement) {
+        adminElement.innerText =
+            "KSh " + total.toLocaleString();
+    }
+}
+
+window.onload = function () {
+    loadStats();
+    loadOnlineCount();
+    loadGroupSavings();
+    loadPendingMembers();
+    loadAnnouncements();
+    loadAnnouncementsList();
+    loadLeadership();
+    loadLeaderboard();
+
+    if (document.getElementById("membersBody")) loadMembers();
+};
+
+// Keep admin financial summaries fresh while the admin page is open. This is
+// read-only: it never inserts or edits contributions. Avoid background refresh
+// while hidden and prevent overlapping refresh cycles on slow mobile networks.
+(function setupRihulaAdminFinanceAutoRefresh() {
+    if (window.__rihulaAdminFinanceRefreshInstalled) return;
+    window.__rihulaAdminFinanceRefreshInstalled = true;
+    let refreshing = false;
+
+    async function refreshFinancialViews() {
+        if (refreshing || document.visibilityState === "hidden" || !window.db) return;
+        refreshing = true;
+        try {
+            const tasks = [];
+            if (typeof window.loadStats === "function") tasks.push(window.loadStats());
+            if (typeof window.loadGroupSavings === "function") tasks.push(window.loadGroupSavings());
+            if (typeof window.loadLeaderboard === "function") tasks.push(window.loadLeaderboard());
+            if (typeof window.loadRecentActivity === "function") tasks.push(window.loadRecentActivity());
+            await Promise.allSettled(tasks);
+        } finally {
+            refreshing = false;
+        }
+    }
+
+    window.addEventListener("load", () => {
+        window.setInterval(refreshFinancialViews, 20000);
+    });
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") refreshFinancialViews();
+    });
+})();
+async function editMember() {
+
+    const phone =
+        document.getElementById("editPhone").value;
+
+    const name =
+        document.getElementById("editName").value;
+
+    const { error } = await db
+        .from("members")
+        .update({
+            name: name
+        })
+        .eq("phone", phone);
 
     if (error) {
-        console.log(error);
+        showPopup(error.message, "error");
+    } else {
+        showPopup("Member updated successfully.", "success");
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
+    }
+}
+
+async function editContribution() {
+
+    const phone =
+        document.getElementById(
+            "editContributionPhone"
+        ).value;
+
+    const amount =
+        document.getElementById(
+            "editContributionAmount"
+        ).value;
+
+    const { error } = await db
+        .from("contributions")
+        .update({
+            amount: amount
+        })
+        .eq("member_phone", phone);
+
+    if (error) {
+        showPopup(error.message, "error");
+    } else {
+        showPopup("Contribution updated successfully.", "success");
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
+    }
+}
+async function loadMembers() {
+
+    const { data, error } = await db
+        .from("members")
+        .select("*");
+
+    if (error) {
+        showPopup(error.message, "error");
         return;
     }
 
-    let container =
-    document.getElementById("adminPlayers");
+    const body =
+        document.getElementById("membersBody");
+
+    body.innerHTML = "";
+
+    for (const member of data) {
+        const { data: contributions } = await db
+    .from("contributions")
+    .select("amount")
+    .eq("member_phone", member.phone);
+
+let totalSavings = 0;
+
+(contributions || []).forEach(item => {
+    totalSavings += Number(item.amount || 0);
+});
+
+    body.innerHTML += `
+<div class="member-card">
+    <h3>${member.name}</h3>
+
+    <p><strong>Phone:</strong> ${member.phone}</p>
+
+    <p><strong>Role:</strong> ${member.role}</p>
+
+    <p><strong>Status:</strong> ${member.status}</p>
+    
+    <p><strong>Total Saved:</strong> KSh${totalSavings}</p>
+
+    <div class="member-actions">
+<button
+    onclick="viewHistory('${member.phone}','${member.name}')"
+    class="btn">
+    History
+</button>
+
+        <button
+            onclick="deleteMember('${member.phone}')"
+            class="btn">
+            Delete
+        </button>
+
+    </div>
+</div>
+`;
+    }
+}
+async function deleteMember(phone) {
+
+    const confirmDelete = await showConfirm("Delete this member? This action cannot be undone.", { title: "Delete member", confirmText: "Delete", danger: true });
+
+    if (!confirmDelete) return;
+
+    const { error } = await db
+        .from("members")
+        .delete()
+        .eq("phone", phone);
+
+    if (error) {
+        showPopup(error.message, "error");
+    } else {
+        showPopup("Member deleted successfully.", "success");
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
+        loadMembers();
+    }
+}
+async function approveMember(phone) {
+
+    const { error } = await db
+        .from("members")
+        .update({
+            status: "approved"
+        })
+        .eq("phone", phone);
+
+    if (error) {
+        showPopup(error.message, "error");
+    } else {
+        showPopup("Member approved successfully.", "success");
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
+
+if (typeof loadMembers === "function") loadMembers();
+if (typeof loadPendingMembers === "function") loadPendingMembers();
+if (typeof loadDashboardStats === "function") loadDashboardStats();
+if (typeof loadLeaderboard === "function") loadLeaderboard();
+    }
+}
+
+async function rejectMember(phone) {
+
+    const confirmed = await showConfirm(
+        "Are you sure you want to reject this member?",
+        { title: "Reject member", confirmText: "Reject", danger: true }
+    );
+
+    if (!confirmed) return;
+
+    const { error } = await db
+        .from("members")
+        .update({ status: "rejected" })
+        .eq("phone", phone);
+
+    if (error) {
+        showPopup(error.message, "error");
+        return;
+    }
+
+    showPopup("Member rejected.", "success");
+
+
+    if (typeof loadMembers === "function") loadMembers();
+    if (typeof loadPendingMembers === "function") loadPendingMembers();
+    if (typeof loadDashboardStats === "function") loadDashboardStats();
+}
+
+async function loadPendingMembers() {
+
+    const { data, error } = await db
+        .from("members")
+        .select("*")
+        .eq("status", "pending");
+
+    if (error) {
+        showPopup(error.message, "error");
+        return;
+    }
+
+    const body =
+        document.getElementById("pendingMembersBody");
+
+    if (!body) return;
+
+    body.innerHTML = "";
+if (!data || data.length === 0) {
+
+    body.innerHTML = `
+        <div class="member-card">
+            <h3>No Pending Members</h3>
+            <p>All members have been approved.</p>
+        </div>
+    `;
+
+    return;
+}
+data.forEach(member => {
+        
+    body.innerHTML += `
+    <div class="member-card">
+        <h3>${member.name}</h3>
+        <p>${member.phone}</p>
+        <p>Status: ${member.status}</p>
+
+        <button onclick="approveMember('${member.phone}')"
+                class="btn">
+            Approve
+        </button>
+
+        <button onclick="rejectMember('${member.phone}')"
+                class="btn">
+            Reject
+        </button>
+    </div>
+    `;
+
+});
+}
+const slides = document.querySelectorAll(".slide");
+
+let currentSlide = 0;
+
+if (slides.length > 0) {
+
+    setInterval(() => {
+
+        slides[currentSlide].classList.remove("active");
+
+        currentSlide++;
+
+        if (currentSlide >= slides.length) {
+            currentSlide = 0;
+        }
+
+        slides[currentSlide].classList.add("active");
+
+    }, 4000);
+
+}
+function logout() {
+
+    localStorage.removeItem("loggedUser");
+
+    window.location.href = "login.html";
+}
+async function loadAnnouncements() {
+
+    const { data, error } = await db
+        .from("announcements")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.log(error.message);
+        return;
+    }
+
+    const container =
+        document.getElementById("announcementsContainer");
 
     if (!container) return;
 
     container.innerHTML = "";
 
-data.forEach(player => {
+    data.forEach(item => {
 
-    container.innerHTML +=
-    "<div class='card'>" +
-    "<h3>" +
-    player.username +
-    (player.verified ? " ✅" : "") +
-    "</h3>" +
-    "<button onclick='verifyPlayer(" +
-    player.id +
-    ")'>Verify</button> " +
-    "<button onclick='deletePlayer(" +
-    player.id +
-    ")'>Remove</button>" +
-    "</div>";
+        container.innerHTML += `
+<div class="announcement">
 
-});
+    <span class="date-badge">
+        ${new Date(item.created_at).toLocaleDateString()}
+    </span>
 
-}
-// DELETE PLAYER
-async function deletePlayer(id) {
+    <h3>${item.title}</h3>
 
-    await supabaseClient
-    .from("player_profiles")
-    .delete()
-    .eq("id", id);
+    <p>${item.message}</p>
 
-    loadPlayers();
-}
-async function verifyPlayer(id) {
-
-    const { error } =
-    await supabaseClient
-    .from("player_profiles")
-    .update({
-        verified: true
-    })
-    .eq("id", id);
-
-    if(error){
-        console.log(error);
-        alert("Failed to verify player");
-        return;
-    }
-
-    alert("✅ Player verified");
-
-    loadPlayers();
-}
-// CREATE TOURNAMENT
-async function createTournament() {
-
-    let title =
-    document.getElementById("tournamentName").value;
-
-    let entryFee =
-    document.getElementById("entryFee").value;
-
-    let prizePool =
-    document.getElementById("prizePool").value;
-
-    const { error } =
-    await supabaseClient
-    .from("tournaments")
-    .insert([
-        {
-            title: title,
-            entry_fee: entryFee,
-            prize_pool: prizePool
-        }
-    ]);
-
-    if(error){
-        alert("Failed to create tournament");
-        console.log(error);
-        return;
-    }
-
-    alert("Tournament created");
-
-    loadTournaments();
-}
-
-// LOAD TOURNAMENTS
-async function loadTournaments() {
-
-    const { data } =
-    await supabaseClient
-    .from("tournaments")
-    .select("*")
-    .order("id");
-
-    let container =
-    document.getElementById("tournamentsList");
-
-    if(!container) return;
-
-    container.innerHTML = "";
-
-    data.forEach(tournament => {
-
-        container.innerHTML +=
-"<div class='card'>" +
-tournament.title +
-"<br>Fee: " +
-tournament.entry_fee +
-"<br>Prize: " +
-tournament.prize_pool +
-"<br><br>" +
-"<button onclick='deleteTournament(" +
-tournament.id +
-")'>Delete</button>" +
-"</div>";
-
-    });
-}
-async function deleteTournament(id) {
-
-    await supabaseClient
-    .from("tournaments")
-    .delete()
-    .eq("id", id);
-
-    loadTournaments();
-}
-// CREATE FIXTURE
-async function createFixture() {
-
-    let player1 =
-    document.getElementById("player1").value;
-
-    let player2 =
-    document.getElementById("player2").value;
-
-    const { error } =
-    await supabaseClient
-    .from("fixtures")
-    .insert([
-        {
-            player1: player1,
-            player2: player2
-        }
-    ]);
-
-    if(error){
-        alert("Failed to create fixture");
-        console.log(error);
-        return;
-    }
-
-    loadFixtures();
-}
-
-// LOAD FIXTURES
-async function loadFixtures() {
-
-    const { data, error } =
-    await supabaseClient
-    .from("fixtures")
-    .select("*")
-    .order("id");
-
-    if(error){
-        console.log(error);
-        return;
-    }
-
-    let container =
-    document.getElementById("fixturesAdminList");
-
-    if(!container) return;
-
-    container.innerHTML = "";
-
-    data.forEach(fixture => {
-
-        container.innerHTML +=
-"<div class='card'>" +
-fixture.player1 +
-" 🆚 " +
-fixture.player2 +
-"<br><br>" +
-"<button onclick='deleteFixture(" +
-fixture.id +
-")'>Delete</button>" +
-"</div>";
-
-    });
-}
-async function deleteFixture(id) {
-
-    await supabaseClient
-    .from("fixtures")
-    .delete()
-    .eq("id", id);
-
-    loadFixtures();
-}
-// LOGOUT
-function logout() {
-
-    localStorage.removeItem(
-        "adminLoggedIn"
-    );
-
-    window.location.href =
-    "login.html";
-}
-// ADD LEADERBOARD PLAYER
-async function addLeaderboard() {
-
-    let username =
-    document.getElementById("leaderboardUsername").value;
-
-    let points =
-    document.getElementById("leaderboardPoints").value;
-
-    const { error } =
-    await supabaseClient
-    .from("leaderboard")
-    .insert([
-        {
-            username: username,
-            points: points
-        }
-    ]);
-
-    if(error){
-        alert("Failed to add player");
-        console.log(error);
-        return;
-    }
-
-    loadLeaderboard();
-}
-
-// LOAD LEADERBOARD
-async function loadLeaderboard() {
-
-    const { data, error } =
-    await supabaseClient
-    .from("leaderboard")
-    .select("*")
-    .order("points", {
-        ascending: false
+</div>
+`;
     });
 
-    if(error){
-        console.log(error);
+}
+async function addAnnouncement() {
+
+    const title =
+        document.getElementById("announcementTitle").value;
+
+    const message =
+        document.getElementById("announcementMessage").value;
+
+    if (!title || !message) {
+        showPopup("Please fill in all required fields.", "warning");
         return;
     }
 
-    let container =
-    document.getElementById("adminLeaderboardList");
+    const { error } = await db
+        .from("announcements")
+        .insert([
+            {
+                title: title,
+                message: message
+            }
+        ]);
 
-    if(!container) return;
+    if (error) {
+        showPopup(error.message, "error");
+    } else {
 
-    container.innerHTML = "";
+        showPopup("Announcement posted successfully.", "success");
 
-    data.forEach(player => {
+        document.getElementById(
+            "announcementTitle"
+        ).value = "";
 
-        container.innerHTML +=
-"<div class='card'>" +
-player.username +
-" - " +
-player.points +
-" Points" +
-"<br><br>" +
-"<button onclick='deleteLeaderboard(" +
-player.id +
-")'>Delete</button>" +
-"</div>";
-
-    });
+        document.getElementById(
+            "announcementMessage"
+        ).value = "";
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
+    }
 }
-async function deleteLeaderboard(id) {
+async function loadAnnouncementsList() {
 
-    await supabaseClient
-    .from("leaderboard")
-    .delete()
-    .eq("id", id);
+    const { data, error } = await db
+        .from("announcements")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    loadLeaderboard();
-}
-// ADD HALL OF FAME
-async function addHallOfFame() {
-
-    let tournament =
-    document.getElementById("hofTournament").value;
-
-    let champion =
-    document.getElementById("hofChampion").value;
-
-    let year =
-    document.getElementById("hofYear").value;
-
-    const { error } =
-    await supabaseClient
-    .from("halloffame")
-    .insert([
-        {
-            tournament: tournament,
-            champion: champion,
-            year: year
-        }
-    ]);
-
-    if(error){
-        alert("Failed to add champion");
-        console.log(error);
+    if (error) {
+        showPopup(error.message, "error");
         return;
     }
 
-    loadHallOfFame();
-}
+    const container =
+        document.getElementById("announcementsList");
 
-// LOAD HALL OF FAME
-async function loadHallOfFame() {
-
-    const { data, error } =
-    await supabaseClient
-    .from("halloffame")
-    .select("*")
-    .order("year", {
-        ascending: false
-    });
-
-    if(error){
-        console.log(error);
-        return;
-    }
-
-    let container =
-    document.getElementById("adminHallOfFameList");
-
-    if(!container) return;
+    if (!container) return;
 
     container.innerHTML = "";
 
     data.forEach(item => {
 
-       container.innerHTML +=
-"<div class='card'>" +
-"🏆 " + item.tournament +
-" (" + item.year + ")" +
-"<br>Champion: " +
-item.champion +
-"<br><br>" +
-"<button onclick='deleteHallOfFame(" +
-item.id +
-")'>Delete</button>" +
-"</div>"; 
+        container.innerHTML += `
+        <div class="card">
 
+            <h3>${item.title}</h3>
+
+            <p>${item.message}</p>
+
+            <button onclick="deleteAnnouncement(${item.id})">
+    Delete
+</button>
+
+        </div>
+        `;
     });
 }
-async function deleteHallOfFame(id) {
+async function deleteAnnouncement(id) {
 
-    await supabaseClient
-    .from("halloffame")
-    .delete()
-    .eq("id", id);
+    const confirmDelete = await showConfirm("Delete this announcement? This action cannot be undone.", { title: "Delete announcement", confirmText: "Delete", danger: true });
 
-    loadHallOfFame();
+    if (!confirmDelete) return;
+
+    const { error } = await db
+        .from("announcements")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+        showPopup("Could not delete the announcement: " + error.message, "error");
+    } else {
+        showPopup("Announcement deleted successfully.", "success");
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
+        loadAnnouncementsList();
+    }
 }
-// ADD RESULT
-async function addResult() {
+async function loadLeadership() {
 
-    let player1 =
-    document.getElementById("resultPlayer1").value;
+    const { data, error } = await db
+        .from("leadership")
+        .select("*");
 
-    let player2 =
-    document.getElementById("resultPlayer2").value;
+    if (error) {
+        showPopup(error.message, "error");
+        return;
+    }
 
-    let score1 =
-    parseInt(document.getElementById("score1").value);
+    data.forEach(item => {
 
-    let score2 =
-    parseInt(document.getElementById("score2").value);
+        const position = item.position.toLowerCase().trim();
 
-    let winner =
-    document.getElementById("winner").value;
+        if (position === "chairman") {
 
-    const { error } =
-    await supabaseClient
-    .from("results")
-    .insert([
-        {
-            player1,
-            player2,
-            score1,
-            score2,
-            winner
+            const chairmanPhoto = document.getElementById("chairmanPhoto");
+            const chairmanName = document.getElementById("chairmanName");
+
+            if (chairmanPhoto && item.photo_url) {
+                chairmanPhoto.src = item.photo_url;
+            }
+
+            if (chairmanName) {
+                chairmanName.innerText = item.name;
+            }
         }
-    ]);
 
-    if(error){
-        alert("Failed to save result");
-        console.log(error);
-        return;
-    }
+        if (position === "secretary") {
 
-    // UPDATE PLAYER STATS
+            const secretaryPhoto = document.getElementById("secretaryPhoto");
+            const secretaryName = document.getElementById("secretaryName");
 
-    if(score1 > score2){
+            if (secretaryPhoto && item.photo_url) {
+                secretaryPhoto.src = item.photo_url;
+            }
 
-        await supabaseClient.rpc(
-            "increment_wins",
-            { username_input: player1 }
-        );
+            if (secretaryName) {
+                secretaryName.innerText = item.name;
+            }
+        }
 
-        await supabaseClient.rpc(
-            "increment_losses",
-            { username_input: player2 }
-        );
+        if (position === "treasurer") {
 
-    }
-    else if(score2 > score1){
+            const treasurerPhoto = document.getElementById("treasurerPhoto");
+            const treasurerName = document.getElementById("treasurerName");
 
-        await supabaseClient.rpc(
-            "increment_wins",
-            { username_input: player2 }
-        );
+            if (treasurerPhoto && item.photo_url) {
+                treasurerPhoto.src = item.photo_url;
+            }
 
-        await supabaseClient.rpc(
-            "increment_losses",
-            { username_input: player1 }
-        );
+            if (treasurerName) {
+                treasurerName.innerText = item.name;
+            }
+        }
 
-    }
-    else{
+        if (position === "organiser") {
 
-        await supabaseClient.rpc(
-            "increment_draws",
-            { username_input: player1 }
-        );
+            const organiserPhoto = document.getElementById("organiserPhoto");
+            const organiserName = document.getElementById("organiserName");
 
-        await supabaseClient.rpc(
-            "increment_draws",
-            { username_input: player2 }
-        );
+            if (organiserPhoto && item.photo_url) {
+                organiserPhoto.src = item.photo_url;
+            }
 
-    }
+            if (organiserName) {
+                organiserName.innerText = item.name;
+            }
+        }
 
-    alert("✅ Result saved");
+    });
 
-    loadResults();
 }
-// LOAD RESULTS
-async function loadResults() {
+async function loadDashboardStats() {
 
-    const { data, error } =
-    await supabaseClient
-    .from("results")
-    .select("*")
-    .order("id", { ascending: false });
+    // Total Members
+    const { data: members } = await db
+        .from("members")
+        .select("*");
 
-    if(error){
-        console.log(error);
+    const totalMembers =
+document.getElementById("totalMembers");
+
+if (totalMembers) {
+    totalMembers.innerText =
+        members ? members.length : 0;
+}
+
+    // Pending Members
+    const { data: pending } = await db
+        .from("members")
+        .select("*")
+        .eq("status", "pending");
+
+     
+    // Total Savings
+    const { data: contributions } = await db
+        .from("contributions")
+        .select("amount");
+
+    let totalSavings = 0;
+
+    (contributions || []).forEach(item => {
+        totalSavings += Number(item.amount || 0);
+    });
+
+    const totalSavingsElement = document.getElementById("totalSavings");
+
+if (totalSavingsElement) {
+    totalSavingsElement.innerText =
+        "KSh " + totalSavings.toLocaleString();
+}
+}
+loadDashboardStats();
+async function viewHistory(phone, name) {
+
+    const { data, error } = await db
+        .from("contributions")
+        .select("*")
+        .eq("member_phone", phone)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        showPopup(error.message, "error");
         return;
     }
 
-    let container =
-    document.getElementById("resultsAdminList");
+    let historyText =
+        "Contribution History for " + name + "\n\n";
 
-    if(!container) return;
+    if (!data || data.length === 0) {
 
-    container.innerHTML = "";
+        historyText += "No contributions found.";
 
-    data.forEach(result => {
+    } else {
 
-        container.innerHTML +=
-"<div class='card'>" +
-result.player1 + " " +
-result.score1 + " - " +
-result.score2 + " " +
-result.player2 +
-"<br>🏆 Winner: " +
-result.winner +
-"<br><br>" +
-"<button onclick='deleteResult(" +
-result.id +
-")'>Delete</button>" +
-"</div>";
+        data.forEach(item => {
+
+            historyText +=
+                "KSh " + item.amount +
+                " - " +
+                new Date(item.created_at)
+                    .toLocaleDateString()
+                + "\n";
+        });
+    }
+
+    showPopup(historyText, "info", "Contribution history", 6500);
+}
+function searchMembers() {
+
+    const search =
+        document.getElementById("memberSearch")
+        .value
+        .toLowerCase();
+
+    const cards =
+        document.querySelectorAll(".member-card");
+
+    cards.forEach(card => {
+
+        const text =
+            card.innerText.toLowerCase();
+
+        if (text.includes(search)) {
+            card.style.display = "block";
+        } else {
+            card.style.display = "none";
+        }
 
     });
 }
-async function deleteResult(id) {
-
-    await supabaseClient
-    .from("results")
-    .delete()
-    .eq("id", id);
-
-    loadResults();
+async function addActivity(action) {
+    if (window.RihulaAdmin && typeof RihulaAdmin.logActivity === "function") {
+        return RihulaAdmin.logActivity(action);
+    }
+    return false;
 }
-// LOAD PAYMENTS
-async function loadPayments() {
+async function loadOnlineCount() {
 
-    const { data, error } =
-    await supabaseClient
-    .from("payments")
-    .select("*")
-    .order("id", { ascending: false });
+    const { data, error } = await db
+        .from("members")
+        .select("phone")
+        .eq("online", true);
 
-    if(error){
-        console.log(error);
+    if (error) return;
+
+    const onlineMembers = document.getElementById("onlineMembers");
+
+if (onlineMembers) {
+    onlineMembers.innerText = data.length;
+}
+}
+
+async function loadLeaderboard() {
+    const container = document.getElementById("leaderboardContainer");
+    if (!container) return;
+
+    try {
+        // Use the same server-side net-savings leaderboard as the member finance
+        // dashboard, so withdrawals affect rankings consistently in both places.
+        const { data, error } = await db.rpc("get_finance_leaderboard");
+        if (error) throw error;
+
+        const rankings = (data || []).map(row => ({
+            name: String(row.member_name || "Member"),
+            total: Number(row.net_savings || 0),
+            rank: Number(row.member_rank || 0)
+        }));
+
+        container.innerHTML = rankings.length ? rankings.map((member, index) => {
+            const rank = member.rank > 0 ? member.rank : index + 1;
+            const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : "#" + rank;
+            const safeName = member.name.replace(/[&<>"']/g, char => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+            }[char]));
+            return `<div class="leaderboard-card"><h3>${medal} ${safeName}</h3><p>KSh ${member.total.toLocaleString("en-KE")}</p></div>`;
+        }).join("") : "<p>No members found.</p>";
+    } catch (error) {
+        console.error("Admin net-savings leaderboard could not load:", error);
+        container.innerHTML = "<p>Unable to load leaderboard. Please refresh and try again.</p>";
+    }
+}
+async function loadHomeStats() {
+
+    const memberCountElement = document.getElementById("memberCount");
+    const totalContributionsElement = document.getElementById("totalContributions");
+
+    // If we're not on the home page, stop.
+    if (!memberCountElement || !totalContributionsElement) {
         return;
     }
 
-    let container =
-    document.getElementById("paymentsList");
+    const { count: memberCount } = await db
+        .from("members")
+        .select("*", { count: "exact", head: true });
 
-    if(!container) return;
+    memberCountElement.innerText = memberCount || 0;
 
-    container.innerHTML = "";
+    const { data } = await db
+        .from("contributions")
+        .select("amount");
 
-    data.forEach(payment => {
+    let total = 0;
 
-    container.innerHTML +=
-    "<div class='card'>" +
-    "<b>" + payment.name + "</b>" +
-    "<br>Phone: " + payment.phone +
-    "<br>Amount: KSh " + payment.amount +
-    "<br>Status: " + payment.status +
-    "<br><br>" +
-    "<button onclick='approvePayment(" +
-    payment.id +
-    ")'>Approve</button> " +
-    "<button onclick='deletePayment(" +
-    payment.id +
-    ")'>Delete</button>" +
-    "</div>";
+    (data || []).forEach(item => {
+        total += Number(item.amount || 0);
+    });
 
-});
+    totalContributionsElement.innerText =
+        "KSh " + total.toLocaleString();
+}
+if (document.getElementById("memberCount")) {
+    loadHomeStats();
+}
+function showSection(sectionId) {
+
+    // Hide all admin sections
+    document.querySelectorAll(".admin-section").forEach(section => {
+        section.style.display = "none";
+    });
+
+    // Show the selected section
+    const selected = document.getElementById(sectionId);
+
+    if (selected) {
+        selected.style.display = "block";
+    }
+
 }
 
-// APPROVE PAYMENT
-async function approvePayment(id) {
+async function loadAdminGroupGoal() {
+    const { data, error } = await db
+        .from("settings")
+        .select("group_goal")
+        .eq("id", 1)
+        .single();
 
-    const { error } =
-    await supabaseClient
-    .from("payments")
-    .update({
-        status: "Paid"
-    })
-    .eq("id", id);
-
-    if(error){
-        console.log(error);
+    if (error) {
+        console.error("Load group goal error:", error);
         return;
     }
 
-    alert("✅ Payment approved");
+    const goal = Number(data.group_goal || 0);
 
-    loadPayments();
+    const currentGoal = document.getElementById("adminCurrentGroupGoal");
+    const input = document.getElementById("adminGroupGoalInput");
+
+    if (currentGoal) {
+        currentGoal.innerText = "KSh " + goal.toLocaleString();
+    }
+
+    if (input) {
+        input.value = goal;
+    }
 }
-async function deletePayment(id) {
 
-    await supabaseClient
-    .from("payments")
-    .delete()
-    .eq("id", id);
+async function updateGroupGoal() {
+    const input = document.getElementById("adminGroupGoalInput");
 
-    loadPayments();
+    if (!input) {
+        showPopup("Group goal input was not found.", "error");
+        return;
+    }
+
+    const newGoal = Number(input.value);
+
+    if (!newGoal || newGoal <= 0) {
+        showPopup("Please enter a valid goal amount.", "warning");
+        return;
+    }
+
+    const { error } = await db
+        .from("settings")
+        .update({ group_goal: newGoal })
+        .eq("id", 1);
+
+    if (error) {
+        console.error("Update group goal error:", error);
+        showPopup(
+            "Failed to update group goal:\n" + error.message,
+            "error"
+        );
+        return;
+    }
+
+    const currentGoal = document.getElementById("adminCurrentGroupGoal");
+
+    if (currentGoal) {
+        currentGoal.innerText = "KSh " + newGoal.toLocaleString();
+    }
+
+    if (typeof loadRecentActivity === "function") loadRecentActivity();
+
+    showPopup(
+        "Group goal updated successfully.\n\nNew goal: KSh " +
+        newGoal.toLocaleString(),
+        "success"
+    );
 }
-// START
-loadPlayers();
-loadTournaments();
-loadFixtures();
-loadLeaderboard();
-loadHallOfFame();
-loadResults();
-loadPayments();
+async function recordWithdrawal() {
+    const rawPhone = (document.getElementById("withdrawalPhone")?.value || "").trim();
+    const amount = Number(document.getElementById("withdrawalAmount")?.value || 0);
+    const reason = (document.getElementById("withdrawalReason")?.value || "").trim();
+
+    const normalizePhone = (value) => {
+        let p = String(value || "").replace(/[\s\-()]/g, "");
+        if (p.startsWith("+254")) p = "0" + p.slice(4);
+        else if (p.startsWith("254")) p = "0" + p.slice(3);
+        return p;
+    };
+
+    const phone = normalizePhone(rawPhone);
+
+    if (!phone) return showPopup("Please enter the member phone number.", "error");
+    if (!Number.isFinite(amount) || amount <= 0) {
+        return showPopup("Please enter a valid withdrawal amount.", "error");
+    }
+    if (amount > 10000000) {
+        return showPopup("Withdrawal amount is above the allowed limit.", "error");
+    }
+
+    try {
+        const admin = await RihulaAdmin.getAdminUser();
+        if (!admin) return showPopup("Admin session expired. Please sign in again.", "error");
+
+        // Accept the common Kenyan phone formats used by existing records:
+        // 07..., 01..., 2547..., 2541..., +2547..., and +2541... . The database RPC also normalizes
+        // numbers, so the admin lookup must use the same matching rule.
+        const phoneCandidates = [
+            phone,
+            phone.startsWith("0") ? "254" + phone.slice(1) : phone,
+            phone.startsWith("0") ? "+254" + phone.slice(1) : phone
+        ].filter((value, index, list) => value && list.indexOf(value) === index);
+
+        let memberQuery = db
+            .from("members")
+            .select("id, name, phone")
+            .in("phone", phoneCandidates);
+
+        const { data: members, error: memberError } = await memberQuery;
+        if (memberError) throw memberError;
+
+        // Keep the normalized comparison as the final guard in case the
+        // stored value contains spaces, dashes, or parentheses.
+        const normalizeForMatch = (value) =>
+            String(value || "").replace(/\D/g, "").replace(/^254/, "0");
+
+        const member = (members || []).find(
+            (item) => normalizeForMatch(item.phone) === normalizeForMatch(phone)
+        );
+
+        if (memberError) throw memberError;
+        if (!member) return showPopup("Member with that phone number was not found.", "error");
+
+        const result = await window.processWithdrawal(phone, amount, reason || "Savings withdrawal");
+
+        const balanceAfter = Number(result.balanceAfter || 0);
+
+        showPopup(
+            `KSh ${amount.toLocaleString("en-KE")} withdrawn from ${member.name}'s savings.\n\nRemaining savings: KSh ${balanceAfter.toLocaleString("en-KE")}`,
+            "success"
+        );
+
+        ["withdrawalPhone", "withdrawalAmount", "withdrawalReason"].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = "";
+        });
+
+        if (typeof loadRecentActivity === "function") loadRecentActivity();
+
+        if (typeof refreshRihulaFinance === "function") await refreshRihulaFinance();
+        else {
+            if (typeof loadDashboardStats === "function") await loadDashboardStats();
+            if (typeof loadGroupSavings === "function") await loadGroupSavings();
+            if (typeof loadLeaderboard === "function") await loadLeaderboard();
+        }
+    } catch (error) {
+        console.error("Withdrawal error:", error);
+        showPopup("Could not record withdrawal: " + (error?.message || error), "error");
+    }
+}

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Online Members</title>
+
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="rihula-modern-design.css">
+<link rel="stylesheet" href="rihula-v3-ui.css">
+</head>
+<body>
+
+<header>
+<div class="logo-area">
+    <img src="images/logo.jpg" alt="Logo">
+
+    <div>
+        <h1>Online Members</h1>
+        <p>RIHULA MUKHOBOLA ASSOCIATION</p>
+    </div>
+</div>
+</header>
+
+<section class="admin-panel">
+
+<div class="admin-card">
+
+<h2>🟢 Members Currently Online</h2>
+
+<div id="onlineMembersList">
+
+</div>
+
+</div>
+
+</section>
+
+<script src="popups.js?v=20260826-0835"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'"></script>
+<script src="supabase.js?v=20260826-0835"></script>
+<script src="rihula-db-guard.js?v=20260826-0835"></script>
+<script src="admin-auth.js?v=20260827-activity"></script>
+<script>
+document.documentElement.style.visibility = "hidden";
+document.addEventListener("DOMContentLoaded", async () => { const admin = await RihulaAdmin.requireAdmin(); if (admin) document.documentElement.style.visibility = "visible"; });
+</script>
+<script src="script.js?v=20260826-0835"></script>
+
+<script>
+async function loadOnlineCount() {
+    const onlineMembersList = document.getElementById("onlineMembersList");
+
+    if (!onlineMembersList) return;
+
+    onlineMembersList.innerHTML = `
+        <p style="text-align:center;">Loading online members...</p>
+    `;
+
+    try {
+        const { data, error } = await db
+    .from("members")
+            .select("id, name, phone, photo_url, last_seen")
+            .eq("online", true)
+            .order("name", { ascending: true });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            onlineMembersList.innerHTML = `
+                <p style="text-align:center;">
+                    No members are currently online.
+                </p>
+            `;
+            return;
+        }
+
+        onlineMembersList.innerHTML = data.map(member => `
+            <div class="member-card">
+                <div class="member-info">
+                    <strong>${member.name || "Unnamed Member"}</strong>
+                    <p>${member.phone || ""}</p>
+                </div>
+
+                <span class="online-status">🟢 Online</span>
+            </div>
+        `).join("");
+
+    } catch (error) {
+        console.error("Online members error:", error);
+
+        onlineMembersList.innerHTML = `
+            <p style="text-align:center; color:red;">
+                Unable to load online members.
+            </p>
+        `;
+    }
+}
+
+loadOnlineCount();
+</script>
+
+<script src="v22.js?v=20260826-0835"></script>
+<script src="rihula-v3-ui.js?v=20260826-0835"></script>
+</body>
+</html>

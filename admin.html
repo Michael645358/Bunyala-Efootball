@@ -1,180 +1,594 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard</title>
+<title>RIHULA Admin Dashboard</title>
+
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="admin-dashboard-3.css">
+<link rel="stylesheet" href="rihula-modern-design.css">
+<link rel="stylesheet" href="rihula-v3-ui.css">
 </head>
-<body>
 
-<header class="hero">
-    <h1>Admin Dashboard</h1>
-    <p>Bunyala Efootball Gamers</p>
+<body class="admin-dashboard-page">
 
-    <a href="index.html">
-        <button>Home</button>
-    </a>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'"></script>
+<script src="supabase.js?v=20260826-0835"></script>
+<script src="rihula-db-guard.js?v=20260826-0835"></script>
+<script src="admin-auth.js?v=20260827-activity"></script>
+<script>
+document.documentElement.style.visibility = "hidden";
+(async function () {
+    const admin = await RihulaAdmin.requireAdmin();
+    if (admin) document.documentElement.style.visibility = "visible";
+})();
+</script>
 
-    <br><br>
+<div class="admin-shell">
 
-    <button onclick="logout()">
-        Logout
-    </button>
-</header>
+    <aside class="admin-sidebar" id="adminSidebar">
 
-<section>
-    <h2>Registered Players</h2>
-    <div id="adminPlayers"></div>
-</section>
+        <div class="admin-brand">
+            <img src="images/logo.jpg" alt="RIHULA Logo">
+            <div>
+                <strong>RIHULA</strong>
+                <span>Admin Panel</span>
+            </div>
+        </div>
 
-<section>
-    <h2>Create Tournament</h2>
+        <nav class="admin-nav">
 
-    <input id="tournamentName"
-           type="text"
-           placeholder="Tournament Name">
+            <a href="admin.html" class="admin-nav-item active">
+                <span>📊</span>
+                <span>Dashboard</span>
+            </a>
 
-    <br><br>
+            <a href="all-members.html" class="admin-nav-item">
+                <span>👥</span>
+                <span>All Members</span>
+            </a>
+            
+            <a href="pending-members.html" class="admin-nav-item">
+    <span>⏳</span>
+    <span>Pending Members</span>
+</a>
 
-    <input id="entryFee"
-           type="number"
-           placeholder="Entry Fee">
+            <a href="online-members.html" class="admin-nav-item">
+                <span>🟢</span>
+                <span>Online Members</span>
+            </a>
 
-    <br><br>
+            <a href="record-contribution.html" class="admin-nav-item">
+                <span>💰</span>
+                <span>Record Contribution</span>
+            </a>
 
-    <input id="prizePool"
-           type="number"
-           placeholder="Prize Pool">
+            <a href="leaderboard.html" class="admin-nav-item">
+                <span>🏆</span>
+                <span>Leaderboard</span>
+            </a>
 
-    <br><br>
+            <a href="edit-member.html" class="admin-nav-item">
+                <span>✏️</span>
+                <span>Edit Member</span>
+            </a>
 
-    <button onclick="createTournament()">
-        Create Tournament
-    </button>
+            <a href="edit-contribution.html" class="admin-nav-item">
+                <span>📝</span>
+                <span>Edit Contribution</span>
+            </a>
 
-    <p id="tournamentMessage"></p>
+            <a href="announcements.html" class="admin-nav-item">
+                <span>📢</span>
+                <span>Announcements</span>
+            </a>
 
-    <div id="tournamentsList"></div>
-</section>
+            <a href="gallery-admin.html" class="admin-nav-item">
+                <span>🖼️</span>
+                <span>Gallery</span>
+            </a>
 
-<section>
-    <h2>Create Fixture</h2>
+            <a href="admin-activities.html" class="admin-nav-item">
+                <span>🕘</span>
+                <span>Admin Activities</span>
+            </a>
 
-    <input id="player1"
-           type="text"
-           placeholder="Player 1">
+            <a href="whatsapp.html" class="admin-nav-item">
+                <span>📱</span>
+                <span>WhatsApp Members</span>
+            </a>
 
-    <br><br>
+        </nav>
 
-    <input id="player2"
-           type="text"
-           placeholder="Player 2">
+        <div class="admin-sidebar-bottom">
+            <a href="login.html" class="admin-nav-item admin-member-login-link">
+                <span>👤</span>
+                <span>Login as Member</span>
+            </a>
 
-    <br><br>
+            <a href="index.html" class="admin-nav-item">
+                <span>🌐</span>
+                <span>View Website</span>
+            </a>
 
-    <button onclick="createFixture()">
-        Create Fixture
-    </button>
+            <button type="button" class="admin-nav-item admin-logout" onclick="adminLogout()">
+                <span>🚪</span>
+                <span>Logout</span>
+            </button>
+        </div>
 
-    <div id="fixturesAdminList"></div>
-</section><section>
-    <h2>Match Results</h2>
+    </aside>
 
-    <input id="resultPlayer1"
-           type="text"
-           placeholder="Player 1">
+    <div class="admin-main">
 
-    <br><br>
+        <header class="admin-topbar">
 
-    <input id="resultPlayer2"
-           type="text"
-           placeholder="Player 2">
+            <button
+                type="button"
+                class="admin-menu-btn"
+                onclick="toggleAdminSidebar()"
+                aria-label="Open menu">
+                ☰
+            </button>
 
-    <br><br>
+            <div class="admin-page-heading">
+                <span class="admin-eyebrow">RIHULA MUKHOBOLA ASSOCIATION</span>
+                <h1>Admin Dashboard</h1>
+            </div>
 
-    <input id="score1"
-           type="number"
-           placeholder="Score 1">
+            <div class="admin-top-actions">
+                <span class="admin-status">
+                    <i></i> System Online
+                </span>
 
-    <br><br>
+                <a href="login.html" class="admin-mode-btn" title="Open member login">
+                    👤 Member
+                </a>
 
-    <input id="score2"
-           type="number"
-           placeholder="Score 2">
+                <button
+                    type="button"
+                    class="admin-icon-btn"
+                    onclick="refreshAdminDashboard()"
+                    aria-label="Refresh dashboard">
+                    ↻
+                </button>
 
-    <br><br>
+                <button
+                    type="button"
+                    class="admin-avatar"
+                    onclick="adminLogout()"
+                    aria-label="Logout">
+                    A
+                </button>
+            </div>
 
-    <input id="winner"
-           type="text"
-           placeholder="Winner">
+        </header>
 
-    <br><br>
 
-    <button onclick="addResult()">
-        Save Result
-    </button>
+        <main class="admin-content">
 
-    <div id="resultsAdminList"></div>
-</section>
+            <section class="admin-welcome">
 
-<section>
-    <h2>Leaderboard</h2>
+                <div>
+                    <span class="admin-welcome-label">Good day, Admin 👋</span>
+                    <h2>Manage your association from one place.</h2>
+                    <p>
+                        Monitor members, savings, approvals and community activity
+                        from your RIHULA control centre.
+                    </p>
+                </div>
 
-    <input id="leaderboardUsername"
-           type="text"
-           placeholder="Username">
+            </section>
 
-    <br><br>
 
-    <input id="leaderboardPoints"
-           type="number"
-           placeholder="Points">
+            <section class="admin-stats-grid">
 
-    <br><br>
+                <article class="admin-stat-card members">
+                    <div class="admin-stat-icon">👥</div>
+                    <div>
+                        <span>Total Members</span>
+                        <strong id="totalMembers">0</strong>
+                    </div>
+                </article>
 
-    <button onclick="addLeaderboard()">
-        Add Player
-    </button>
+                <article class="admin-stat-card pending">
+                    <div class="admin-stat-icon">⏳</div>
+                    <div>
+                        <span>Pending Members</span>
+                        <strong id="pendingMembers">0</strong>
+                    </div>
+                </article>
 
-    <div id="adminLeaderboardList"></div>
-</section>
+                <article class="admin-stat-card savings">
+                    <div class="admin-stat-icon">💰</div>
+                    <div>
+                        <span>Total Savings</span>
+                        <strong id="totalSavings">KSh 0</strong>
+                    </div>
+                </article>
 
-<section>
-    <h2>Hall of Fame</h2>
+                <article class="admin-stat-card online">
+                    <div class="admin-stat-icon">🟢</div>
+                    <div>
+                        <span>Online Members</span>
+                        <strong id="onlineMembers">0</strong>
+                    </div>
+                </article>
 
-    <input id="hofTournament"
-           type="text"
-           placeholder="Tournament Name">
+            </section>
 
-    <br><br>
 
-    <input id="hofChampion"
-           type="text"
-           placeholder="Champion">
+            <section class="admin-two-column">
 
-    <br><br>
+                <article class="admin-panel-card goal-card">
 
-    <input id="hofYear"
-           type="number"
-           placeholder="Year">
+                    <div class="admin-card-heading">
+                        <div>
+                            <span class="admin-card-kicker">Savings target</span>
+                            <h3>Group Savings Goal</h3>
+                        </div>
+                        <span class="admin-card-icon">🎯</span>
+                    </div>
 
-    <br><br>
+                    <div class="goal-amount" id="adminCurrentGroupGoal">
+                        KSh 0
+                    </div>
 
-    <button onclick="addHallOfFame()">
-        Add Champion
-    </button>
+                    <p class="admin-muted">
+                        Set the amount your association wants to reach.
+                    </p>
 
-    <div id="adminHallOfFameList"></div>
-</section>
+                    <div class="goal-form">
+                        <label for="adminGroupGoalInput">New group goal</label>
 
-<section>
-    <h2>Payments</h2>
-    <div id="paymentsList"></div>
-</section>
-logo.<input type="range" name="" id="" value="" />
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="admin.js"></script>
+                        <div class="goal-input-row">
+                            <input
+                                type="number"
+                                id="adminGroupGoalInput"
+                                min="1"
+                                step="1"
+                                placeholder="Enter amount">
 
+                            <button
+                                type="button"
+                                id="updateGroupGoalBtn"
+                                class="admin-primary-btn">
+                                Save Goal
+                            </button>
+                        </div>
+                    </div>
+
+                </article>
+
+
+                <article class="admin-panel-card">
+
+                    <div class="admin-card-heading">
+                        <div>
+                            <span class="admin-card-kicker">Quick access</span>
+                            <h3>Common Actions</h3>
+                        </div>
+                        <span class="admin-card-icon">⚡</span>
+                    </div>
+
+                    <div class="admin-mini-actions">
+
+                  
+                        <a href="record-contribution.html">
+                            <span>💰</span>
+                            <strong>Add Savings</strong>
+                            <small>Record contribution</small>
+                        </a>
+
+                        <a href="announcements.html">
+                            <span>📢</span>
+                            <strong>Announcement</strong>
+                            <small>Post an update</small>
+                        </a>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- MEMBER WITHDRAWAL -->
+            <section class="admin-panel-card">
+
+                <div class="admin-card-heading">
+                    <div>
+                        <span class="admin-card-kicker">Savings Management</span>
+                        <h3>💸 Member Withdrawal</h3>
+                    </div>
+
+                    <span class="admin-card-icon">💸</span>
+                </div>
+
+                <p class="admin-muted">
+                    Record money withdrawn from a member's savings.
+                </p>
+
+                <div class="goal-form">
+
+                    <label for="withdrawalPhone">
+                        Member phone number
+                    </label>
+
+                    <input
+                        type="text"
+                        id="withdrawalPhone"
+                        placeholder="Enter member phone number">
+
+                    <label for="withdrawalAmount">
+                        Amount withdrawn
+                    </label>
+
+                    <input
+                        type="number"
+                        id="withdrawalAmount"
+                        min="1"
+                        step="1"
+                        placeholder="Enter amount">
+
+                    <label for="withdrawalReason">
+                        Reason
+                    </label>
+
+                    <input
+                        type="text"
+                        id="withdrawalReason"
+                        placeholder="e.g. Cash withdrawal">
+
+                    <button
+                        type="button"
+                        class="admin-primary-btn"
+                        onclick="recordWithdrawal()">
+
+                        💸 Record Withdrawal
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <section class="admin-panel-card admin-tools-card">
+
+                <div class="admin-card-heading">
+                    <div>
+                        <span class="admin-card-kicker">Management</span>
+                        <h3>Administration Tools</h3>
+                    </div>
+                    <span class="admin-card-icon">🛠️</span>
+                </div>
+
+                <div class="admin-tools-grid">
+
+                    <a href="all-members.html" class="admin-tool">
+                        <span>👥</span>
+                        <strong>All Members</strong>
+                        <small>View and manage members</small>
+                    </a>
+
+                    <a href="pending-members.html" class="admin-tool">
+                        <span>⏳</span>
+                        <strong>Pending Members</strong>
+                        <small>Approve or reject new members</small>
+                    </a>
+
+                    <a href="online-members.html" class="admin-tool">
+                        <span>🟢</span>
+                        <strong>Online Members</strong>
+                        <small>See active members</small>
+                    </a>
+
+                    <a href="leaderboard.html" class="admin-tool">
+                        <span>🏆</span>
+                        <strong>Leaderboard</strong>
+                        <small>View savings rankings</small>
+                    </a>
+
+                    <a href="edit-member.html" class="admin-tool">
+                        <span>✏️</span>
+                        <strong>Edit Member</strong>
+                        <small>Update member details</small>
+                    </a>
+
+                    <a href="edit-contribution.html" class="admin-tool">
+                        <span>📝</span>
+                        <strong>Edit Contribution</strong>
+                        <small>Correct a contribution</small>
+                    </a>
+
+                    <a href="admin-activities.html" class="admin-tool">
+                        <span>🕘</span>
+                        <strong>Admin Activities</strong>
+                        <small>View the complete admin audit trail</small>
+                    </a>
+
+                    <a href="whatsapp.html" class="admin-tool">
+                        <span>📱</span>
+                        <strong>WhatsApp Members</strong>
+                        <small>Message members through free WhatsApp Click-to-Chat</small>
+                    </a>
+</div>
+
+            </section>
+
+
+            <section class="admin-two-column">
+                <article class="admin-panel-card system-card">
+
+                    <div class="admin-card-heading">
+                        <div>
+                            <span class="admin-card-kicker">Security</span>
+                            <h3>Admin Session</h3>
+                        </div>
+                        <span class="admin-card-icon">🔐</span>
+                    </div>
+
+                    <div class="system-status-row">
+                        <span>Dashboard access</span>
+                        <strong class="status-good">Verified</strong>
+                    </div>
+
+                    <div class="system-status-row">
+                        <span>Database connection</span>
+                        <strong id="databaseStatus" class="status-good">Checking...</strong>
+                    </div>
+
+                    <div class="system-status-row">
+                        <span>Last refreshed</span>
+                        <strong id="lastRefresh">Just now</strong>
+                    </div>
+
+                    <div class="admin-role-switch">
+                        <div>
+                            <strong>Need member access?</strong>
+                            <small>Use your member credentials without leaving the admin session.</small>
+                        </div>
+                        <a href="login.html">Open Member Login →</a>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="admin-secondary-btn"
+                        onclick="adminLogout()">
+                        🚪 Sign Out
+                    </button>
+
+                </article>
+
+            </section>
+
+        </main>
+
+        <footer class="admin-footer">
+            RIHULA MUKHOBOLA ASSOCIATION · Admin Dashboard
+        </footer>
+
+    </div>
+</div>
+
+<script src="popups.js?v=20260826-0835"></script>
+<script src="admin.js?v=20261028-finance-auto-refresh-v2"></script>
+
+<script>
+async function adminLogout() {
+    await RihulaAdmin.adminLogout();
+}
+
+function toggleAdminSidebar() {
+    document.getElementById("adminSidebar").classList.toggle("open");
+}
+
+function formatMoney(value) {
+    return "KSh " + Number(value || 0).toLocaleString();
+}
+
+async function loadAdminOverview() {
+
+    const databaseStatus = document.getElementById("databaseStatus");
+
+    try {
+
+        const [
+            membersResult,
+            pendingResult,
+            contributionsResult,
+            onlineResult
+        ] = await Promise.all([
+            db.from("members").select("phone", { count: "exact", head: true }),
+            db.from("members").select("phone", { count: "exact", head: true }).eq("status", "pending"),
+            db.from("contributions").select("amount"),
+            db.from("members").select("phone", { count: "exact", head: true }).eq("online", true)
+        ]);
+
+        if (membersResult.error) throw membersResult.error;
+
+        const totalMembers = membersResult.count || 0;
+        const pendingMembers = pendingResult.count || 0;
+        const onlineMembers = onlineResult.count || 0;
+
+        let totalSavings = 0;
+
+        (contributionsResult.data || []).forEach(item => {
+            totalSavings += Number(item.amount || 0);
+        });
+
+        document.getElementById("totalMembers").textContent = totalMembers;
+        document.getElementById("pendingMembers").textContent = pendingMembers;
+        document.getElementById("onlineMembers").textContent = onlineMembers;
+        document.getElementById("totalSavings").textContent = formatMoney(totalSavings);
+
+        databaseStatus.textContent = "Connected";
+        databaseStatus.className = "status-good";
+
+    } catch (error) {
+
+        console.error("Dashboard overview error:", error);
+
+        databaseStatus.textContent = "Connection error";
+        databaseStatus.className = "status-bad";
+
+    }
+}
+
+function setRefreshTime() {
+    document.getElementById("lastRefresh").textContent =
+        new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+}
+
+async function refreshAdminDashboard() {
+
+    const button = document.querySelector(".admin-icon-btn");
+
+    if (button) {
+        button.classList.add("spinning");
+    }
+
+    await Promise.all([
+        loadAdminOverview(),
+        typeof loadAdminGroupGoal === "function"
+            ? loadAdminGroupGoal()
+            : Promise.resolve()
+    ]);
+
+    setRefreshTime();
+
+    if (button) {
+        setTimeout(() => button.classList.remove("spinning"), 450);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    loadAdminOverview();
+    setRefreshTime();
+
+    const goalButton = document.getElementById("updateGroupGoalBtn");
+
+    if (goalButton && typeof updateGroupGoal === "function") {
+        goalButton.addEventListener("click", updateGroupGoal);
+    }
+
+    if (typeof loadAdminGroupGoal === "function") {
+        loadAdminGroupGoal();
+    }
+
+});
+</script>
+
+<script src="v22.js?v=20260826-0835"></script>
+
+<script src="withdrawal-fix.js?v=20260826-0835"></script>
+<script src="finance.js?v=20260826-0835"></script>
+<script src="rihula-v3-ui.js?v=20260826-0835"></script>
 </body>
 </html>
